@@ -21,7 +21,7 @@
 #define CHECKERROR(var,val,msg) if (var==val) {perror(msg); exit(1);}
 
 void help_command(char name[]) {
-  fprintf(stderr, "Usage: %s [train ID] [local IP] [remote IP=localhost] [remote port = %d]\n", name,
+  fprintf(stderr, "Usage: %s [local IP] [remote IP=localhost] [remote port = %d]\n", name,
           502);
 }
 
@@ -97,6 +97,11 @@ int main(int argc, char *argv[]) {
 
   char tramVar[] = { 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0xF0, 0x1E, 0x10, 0x0E, 0x10, 0x37, 0x06, 0x68, 0x07, 0x64, 0x00, 0x03, 0x00, 0x11, 0x00, 0x12, 0x00, 0x13, 0x00 };
 
+  char tramResponse[] = { 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0xF0, 0x1E, 0x10, 0x0E, 0x10, 0x37, 0x06, 0x68, 0x07, 0x64, 0x00, 0x03, 0x00, 0x1E, 0x00, 0x12, 0x00, 0x13, 0x00 };
+
+  char ackNowledge[] = { 0x00, 0x00, 0x00, 0x01, 0x00, 0x07, 0x00, 0xF0, 0x1E, 0x10, 0x0E, 0x10, 0xFE };
+
+  int isTramVar = 0;
   do {
 
     printf(GREEN "CLIENT '%d'>" NOCOLOR, getpid());
@@ -111,7 +116,10 @@ int main(int argc, char *argv[]) {
       tram[12] = 0x25;
       write(sd1, tram, sizeof(tram));
     } else if (strncmp(buff, "data", 4) == 0) {
-      write(sd1, tramVar, sizeof(tramVar));       
+      //fgets(buff, BUFSIZE, stdin);
+
+      write(sd1, tramVar, sizeof(tramVar));    
+      isTramVar = 1;   
     } else {
         write(sd1, tram, sizeof(tram));
     }
@@ -124,6 +132,17 @@ int main(int argc, char *argv[]) {
       printf("%02X ", received[i]);
     }
     printf("\n");
+
+    if (isTramVar) {
+      read(sd1, tramResponse, sizeof(tramResponse));
+      printf("Response received\n");
+      printf("Response: ");
+      for (int i = 0; i < sizeof(tramResponse); i++) {
+        printf("%02X ", tramResponse[i]);
+      }
+
+      write(sd1, ackNowledge, sizeof(ackNowledge));
+    }
 
   } while (strcmp(buff, "FIN") && strcmp(buff, "fin"));
 
