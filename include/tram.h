@@ -12,7 +12,7 @@ class Tram{
     int clientPortNumber;
 
     
-    unsigned char tramVar[29];
+    unsigned char tramVar[28];
     unsigned char tramOk[15];
 
     unsigned char tramReceived[24];
