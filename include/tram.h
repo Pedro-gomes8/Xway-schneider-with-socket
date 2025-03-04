@@ -1,16 +1,33 @@
-#ifndef __tram.h
+#ifndef _TRAM_H
 
-#define __tram.h
+#define _TRAM_H
 
 
-unsigned char aguillagesMap[] = {
+#include <vector>
+
+class Tram{
+    public:
+    Tram(int xWayAddress, int portNumber);
+    int clientStation;
+    int clientPortNumber;
+
     
+    unsigned char tramVar[29];
+    unsigned char tramOk[15];
+
+    unsigned char tramReceived[24];
+    unsigned char ack[15];
 };
 
-unsigned char sectionMap[] = {
+
+// unsigned char aguillagesMap[] = {
+    
+// };
+
+// unsigned char sectionMap[] = {
 
 
-};
+// };
 
 
-#endif // __tram_h
+#endif // _TRAM_H

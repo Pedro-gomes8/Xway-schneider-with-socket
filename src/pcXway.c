@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+// #include <time.h>
 
 #define GREEN "\033[1;32m"
 #define NOCOLOR "\033[1;0m"
@@ -112,42 +113,145 @@ int main(int argc, char *argv[])
 
   char received[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-  char tramVar[] = {0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0xF0, 0x25, 0x10, 0x0E, 0x10, 0x37, 0x06, 0x68, 0x07, 0x34, 0x00, 0x03, 0x00, 0x25, 0x00, 0x07, 0x00, 0xFF, 0xFF};
+  // 37 adresse xway
 
-  char tramResponse[] = {0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0xF0, 0x25, 0x10, 0x0E, 0x10, 0x37, 0x06, 0x68, 0x07, 0x34, 0x00, 0x03, 0x00, 0x25, 0x00, 0x12, 0x00, 0x13, 0x00};
+  char tramVar[] = {0x00, 0x00, 0x00 ,0x01,0x00, // Fixed
+                    0x17, // SIZE OF TRAM
+                    0x00, // FIXED
+                    0xF1, // 5 way extension
+                    0x25, // Mon Adresse Xway = 37
+                    0x10, // Reseau et porte fixed to 01
+                    0x0E, // Fixed
+                    0x10, // Fixed
+                    0x09, // 17 Task number -> Customizable
+                    0x10, // Num porte -> Customizable
+                    0x37, 0x10,0x06, 0x68, 0x07, 0x34, 0x00, 0x03, 0x00, 0x25, 0x00, 0x07, 0x00, 0xFF, 0xFF // Request
 
-  char ackNowledge[] = {0x00, 0x00, 0x00, 0x01, 0x00, 0x09, 0x00, 0xF1, 0x25, 0x10, 0x0E, 0x10, 0x19, 0x18, 0xFE};
+                    };
+  char anotherTram[] = {0x00, 0x00, 0x00 ,0x01,0x00, // Fixed
+    0x16, // SIZE OF TRAM index [5]
+    0x00, // FIXED
+    0xF1, // 5 way extension
+    0x25, // Mon Adresse Xway = 37 index [8]
+    0x10, // Reseau et porte fixed to 01  
+    0x0E, // Fixed
+    0x10, // Fixed
+    0x09, // 09 Task number
+    0x10, // Num porte -> Customizable index[13]
+    0x37, // Code Request -> Write Object index[14]
+    // 0x10, // Why is it here?
+    0x06, // Code categorie
+    0x68, // Object Segment 68 : Espace données internes
+    0x07, // Type du segment 7: word, 8: double word
+    0x34, 0x00, // Instant du premier objet Ex: %MW10 (10 -> 0A 00) 52-> trem 4
+    0x03, 0x00, // Nombre d'objet à ecrire (3 dans ce cas)
+    0x25, 0x00, // Valeur a écrire dans %MW10 par example. 37. Me!
+    0x07, 0x00, // Valeur a écrire dans %MW11. 7 -> ID of troncon
+    0xFF, 0xFF // Valeur a écrire dans %MW12. FF FF  -> FF FF in the aguillage.
+};
+  // char tramVar[] = {0x00, 0x00, 0x00, 0x01, 0x00, 0x15, 0x00, 0xF1, 0x25, 0x10, 0x0E, 0x10,  0x37, 0x10,0x06, 0x68, 0x07, 0x34, 0x00, 0x03, 0x00, 0x25, 0x00, 0x07, 0x00, 0xFF, 0xFF};
 
+  // unsigned char tramResponse[] = {0x00, 0x00, 0x00, 0x01, 0x00, 0x12, 0x00, 0xF1, 0x25, 0x10, 0x25, 0x10, 0x37, 0x06, 0x68, 0x07, 0x34, 0x00, 0x03, 0x00, 0x25, 0x00, 0x12, 0x00, 0x13, 0x00};
+  unsigned char tramResponse[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+ 
+  // APPEND THIS BELOW TO UNDERSTAND THE TRAM
+  // 00 00 00 01 00 -> Fixed
+  // [xx] -> Longeur du octet de requete.
+  // 00 f1 -> 5way address 
+  // 25 -> Xway address my machine 
+  // 10 -> reseau e porte
+  // 0E 10-> Fixed
+  // [09] XX -> [09] adresse de tache XX: porte ATTENTION. 09 doit etre superieur a F
+  // 
+
+  char ackNowledge[] = {0x00, 0x00, 0x00, 0x01, 0x00, 0x09, 0x00, 0xF1, 0x25, 0x10, 0x0E, 0x10, 0x19, 0x10, 0xFE};
+
+  int trajectory = 0;
   int isTramVar = 0;
+  int sizeTram = sizeof(anotherTram)/sizeof(char);
   do
   {
 
-    printf(GREEN "CLIENT '%d'>" NOCOLOR, getpid());
-    // write(sd1, send, sizeof(send));
+    switch (trajectory){
+      case 0:
+        // 7
 
-    fgets(buff, BUFSIZE, stdin);
+        anotherTram[sizeTram-1] = 0x00;
+        anotherTram[sizeTram-2] = 0x07;
 
-    if (strncmp(buff, "run", 3) == 0)
-    {
-      tram[12] = 0x24;
-      write(sd1, tram, sizeof(tram));
-    }
-    else if (strncmp(buff, "stop", 4) == 0)
-    {
-      tram[12] = 0x25;
-      write(sd1, tram, sizeof(tram));
-    }
-    else if (strncmp(buff, "data", 4) == 0)
-    {
-      // fgets(buff, BUFSIZE, stdin);
+        anotherTram[sizeTram-3] = 0xFF;
+        anotherTram[sizeTram-4] = 0xFF;
+        break;
 
-      write(sd1, tramVar, sizeof(tramVar));
-      isTramVar = 1;
+      case 1:
+        anotherTram[sizeTram-1] = 0xFF;
+        anotherTram[sizeTram-2] = 0xFF;
+
+        anotherTram[sizeTram-3] = 0x00;
+        anotherTram[sizeTram-4] = 0x07;
+        break;
+      
+      case 2:
+        anotherTram[sizeTram-1] = 0x00;
+        anotherTram[sizeTram-2] = 0x21;
+
+        anotherTram[sizeTram-3] = 0xFF;
+        anotherTram[sizeTram-4] = 0xFF;
+      
+        break;
+      
+      case 3:
+        anotherTram[sizeTram-1] = 0xFF;
+        anotherTram[sizeTram-2] = 0xFF;
+
+        anotherTram[sizeTram-3] = 0x00;
+        anotherTram[sizeTram-4] = 0x1d;
+      break;
+
+      case 4:
+        anotherTram[sizeTram-1] = 0xFF;
+        anotherTram[sizeTram-2] = 0xFF;
+
+        anotherTram[sizeTram-3] = 0x00;
+        anotherTram[sizeTram-4] = 0x31;
+        break;
+      case 5:
+        anotherTram[sizeTram-1] = 0xFF;
+        anotherTram[sizeTram-2] = 0xFF;
+
+        anotherTram[sizeTram-3] = 0x00;
+        anotherTram[sizeTram-4] = 0x09;
+        break;
+
     }
-    else
-    {
-      write(sd1, tram, sizeof(tram));
-    }
+    // printf(GREEN "CLIENT '%d'>" NOCOLOR, getpid());
+    // // write(sd1, send, sizeof(send));
+
+    // fgets(buff, BUFSIZE, stdin);
+
+    // if (strncmp(buff, "run", 3) == 0)
+    // {
+    //   tram[12] = 0x24;
+    //   write(sd1, tram, sizeof(tram));
+    // }
+    // else if (strncmp(buff, "stop", 4) == 0)
+    // {
+    //   tram[12] = 0x25;
+    //   write(sd1, tram, sizeof(tram));
+    // }
+    // else if (strncmp(buff, "data", 4) == 0)
+    // {
+    //   // fgets(buff, BUFSIZE, stdin);
+
+    //   write(sd1, anotherTram, sizeof(anotherTram));
+    //   isTramVar = 1;
+    // }
+    // else
+    // {
+    write(sd1, anotherTram, sizeof(anotherTram));
+    isTramVar = 1;
+    usleep(300 * 1000);
+    // }
 
     printf("Tram sent\n");
     read(sd1, received, sizeof(received));
@@ -161,8 +265,9 @@ int main(int argc, char *argv[])
 
     if (isTramVar)
     {
+      printf("Waiting capteur\n");
       read(sd1, tramResponse, sizeof(tramResponse));
-      printf("Response received\n");
+      printf("Response received Nice\n");
       printf("Response: ");
       for (int i = 0; i < sizeof(tramResponse); i++)
       {
@@ -172,9 +277,10 @@ int main(int argc, char *argv[])
 
       isTramVar = 0;
     }
-    write(sd1, ackNowledge, sizeof(ackNowledge));
 
-  } while (strcmp(buff, "FIN") && strcmp(buff, "fin"));
+    write(sd1, ackNowledge, sizeof(ackNowledge));
+    trajectory++;
+  } while (trajectory < 6);
 
   close(sd1);
 
