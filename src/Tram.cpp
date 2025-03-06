@@ -26,13 +26,24 @@ Tram::Tram(int xWayAddress, int portNumber) {
         0x07, 0x00, // Valeur a écrire dans %MW11. 7 -> ID of troncon
         0xFF, 0xFF // Valeur a écrire dans %MW12. FF FF  -> FF FF in the aguillage.
     };
+
+    unsigned char ackTemp[] = {0x00, 0x00, 0x00 ,0x01,0x00,
+    0x09,
+    0x00,
+    0xF1,
+    0x25, 0x10,
+    0x0E, 0x10,
+    0x19, 0x00,
+    0xFE};
     
     memcpy(this->tramVar,temp,sizeof(temp));
+    memcpy(this->ack,ackTemp, sizeof(ackTemp));
     this->tramVar[8] = this->clientStation;
+    this->tramVar[22] = this->clientStation;
+
     this->tramVar[13] = this->clientPortNumber;
-
     
-
+    this->tramVarSize = sizeof(this->tramVar)/sizeof(unsigned char);
     }
 
 

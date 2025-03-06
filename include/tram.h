@@ -11,7 +11,7 @@ class Tram{
     int clientStation;
     int clientPortNumber;
 
-    
+    size_t tramVarSize;
     unsigned char tramVar[28];
     unsigned char tramOk[15];
 
