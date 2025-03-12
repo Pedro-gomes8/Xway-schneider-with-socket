@@ -20,7 +20,7 @@ void Train::followPath(){
     std::cout << "istrocon: "<<  isTrocon << "\n";
     
     size_t tramsize = this->tram->tramVarSize;
-    std::cout << "path step" << this->pathStep << "\n";
+    std::cout << "path step " << this->pathStep << "\n";
     if (isTrocon){
         this->tram->tramVar[tramsize - 1] = 0xFF;
         this->tram->tramVar[tramsize - 2] = 0xFF;
@@ -36,6 +36,9 @@ void Train::followPath(){
     }
     
     this->pathStep++;
+    if (this->pathStep >= this->path.size()){
+        this->pathStep = 0;
+    }
     std::cout << "Path Step" << this->pathStep << "\n";
 
 

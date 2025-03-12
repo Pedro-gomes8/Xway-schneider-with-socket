@@ -90,20 +90,44 @@ int main(int argc, char *argv[]){
   
     // 37 adresse xway
   
-    Tram tram(37,10);
+    // change last number depending on the train to test
+    // 39 -> train 1
+    // 42 -> train 2
+    // 49 -> train 3
+    // 52 -> train 4
+    Tram tram(30,10,52);
 
-    std::vector<std::tuple<unsigned char, int>> path1 = {{0x07,0},{0x07,1},{0x21,0},{0x1D,1},{0x31,1},{0x09,1}};
+    // train 1
+    // in ints {{20, 0}, {3, 1}, {22, 0}, {14, 0}, {23, 1}, {33, 0}, {10, 1}, {7, 0}, {10, 0}, {29, 1}, {19, 1}}
+    std::vector<std::tuple<unsigned char, int>> path1 = {{0x14,0},{0x03,1},{0x16,0},{0x0E,0},{0x17,1},{0x21,0},{0x0A,1},{0x03,0},{0x1D,1},{0x13,1}};
+    //Train train1(&tram,path1);
 
-    Train train1(&tram,path1);
+    // train 2
+    // in ints {{7, 0}, {4, 1}, {22, 1}, {27, 1}, {13, 0}, {28, 1}, {12, 0}, {9, 1}, {20, 0}, {24, 1}}
+    std::vector<std::tuple<unsigned char, int>> path2 = {{0x07,0},{0x04,1},{0x16,1},{0x1B,1},{0x0D,0},{0x1C,1},{0x0C,0},{0x09,1},{0x14,0},{0x18,1}};
+    //Train train1(&tram,path2);
+
+    // train 3
+    // in ints {{0, 0}, {0, 1}, {13, 1}, {22, 0}, {20, 1}, {14, 0}, {30, 1}, {13, 0}, {9, 1}, {31, 1}, {21, 0}, {26, 1}, {1, 0}, {15, 1}, {12, 1}}
+    std::vector<std::tuple<unsigned char, int>> path3 = {{0x00,0},{0x00,1},{0x0D,1},{0x16,0},{0x14,1},{0x0E,0},{0x1E,1},{0x0D,0},{0x09,1},{0x1F,1},{0x15,0},{0x1A,1},{0x01,0},{0x0F,1},{0x0C,1}};
+    //Train train1(&tram,path3);
+
+    // train 4
+    // TODO: Fix the path, problem when inversing the troncon in the Ti07 at the end of the path (or the beginning when restarting the path)
+    // in ints {{10, 0}, {7, 1}, {33, 0}, {29, 1}, {13, 0}, {49, 1}, {9, 1}, {28, 1}, {23, 0}, {27, 1}, {47, 1}}
+    std::vector<std::tuple<unsigned char, int>> path4 = {{0x2F,1},{0x0A,0},{0x07,1},{0x21,0},{0x1D,1},{0x0D,0},{0x31,1},{0x09,1},{0x1C,1},{0x17,0},{0x1B,1}};
+    Train train1(&tram,path4);
+
+    train1.followPath();
 
     int isTramVar = 0;
     do
     {
   
     
-        write(sd1, tram.tramVar, sizeof(tram.tramVar));
-        usleep(300 * 1000);
-        isTramVar = 1;
+      write(sd1, tram.tramVar, sizeof(tram.tramVar));
+      usleep(300 * 1000);
+      isTramVar = 1;
   
       printf("Tram sent\n");
       read(sd1, tram.tramReceived, sizeof(tram.tramReceived));

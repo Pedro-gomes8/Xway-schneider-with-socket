@@ -2,9 +2,10 @@
 #include <cstring>
 #include <vector>
 
-Tram::Tram(int xWayAddress, int portNumber) {
+Tram::Tram(int xWayAddress, int portNumber, int trainHex) {
     this->clientStation = xWayAddress;
     this->clientPortNumber = portNumber;
+    this->trainHex = trainHex;
     unsigned char temp[] = {0x00, 0x00, 0x00 ,0x01,0x00, // Fixed
         0x16, // SIZE OF TRAM index [5]
         0x00, // FIXED
@@ -41,7 +42,13 @@ Tram::Tram(int xWayAddress, int portNumber) {
     this->tramVar[8] = this->clientStation;
     this->tramVar[22] = this->clientStation;
 
+    this->ack[8] = this->clientStation;
+
     this->tramVar[13] = this->clientPortNumber;
+    this->ack[13] = this->clientPortNumber;
+
+    this->tramVar[18] = this->trainHex;
+    
     
     this->tramVarSize = sizeof(this->tramVar)/sizeof(unsigned char);
     }

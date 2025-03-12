@@ -7,9 +7,10 @@
 
 class Tram{
     public:
-    Tram(int xWayAddress, int portNumber);
+    Tram(int xWayAddress, int portNumber, int trainHex);
     int clientStation;
     int clientPortNumber;
+    int trainHex;
 
     size_t tramVarSize;
     unsigned char tramVar[28];
