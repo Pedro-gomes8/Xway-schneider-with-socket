@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
     // 42 -> train 2
     // 49 -> train 3
     // 52 -> train 4
-    Tram tram(30,10,52);
+    Tram tram(37,16,52);
 
     // train 1
     // in ints {{20, 0}, {3, 1}, {22, 0}, {14, 0}, {23, 1}, {33, 0}, {10, 1}, {7, 0}, {10, 0}, {29, 1}, {19, 1}}
@@ -115,8 +115,8 @@ int main(int argc, char *argv[]){
     // train 4
     // TODO: Fix the path, problem when inversing the troncon in the Ti07 at the end of the path (or the beginning when restarting the path)
     // in ints {{10, 0}, {7, 1}, {33, 0}, {29, 1}, {13, 0}, {49, 1}, {9, 1}, {28, 1}, {23, 0}, {27, 1}, {47, 1}}
-    std::vector<std::tuple<unsigned char, int>> path4 = {{0x2F,1},{0x0A,0},{0x07,1},{0x21,0},{0x1D,1},{0x0D,0},{0x31,1},{0x09,1},{0x1C,1},{0x17,0},{0x1B,1}};
-    Train train1(&tram,path4);
+    std::vector<std::tuple<unsigned char, int>> path4 = {{0x0A,0},{0x07,1},{0x21,0},{0x1D,1},{0x0D,0},{0x31,1},{0x09,1},{0x1C,1},{0x17,0},{0x1B,1},{0x25,1},{0x2F,1},};
+    Train train1(&tram, path4);
 
     train1.followPath();
 
