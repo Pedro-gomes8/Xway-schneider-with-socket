@@ -1,10 +1,11 @@
-#include "../include/Tram.h"
+#include "../include/tram.h"
 #include <cstring>
 #include <vector>
 
 Tram::Tram(int xWayAddress, int portNumber) {
     this->clientStation = xWayAddress;
     this->clientPortNumber = portNumber;
+    
     unsigned char temp[] = {0x00, 0x00, 0x00 ,0x01,0x00, // Fixed
         0x16, // SIZE OF TRAM index [5]
         0x00, // FIXED

@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "../include/mapping.h"
-#include "../include/Tram.h"
+#include "../include/tram.h"
 
 #define GREEN "\033[1;32m"
 #define NOCOLOR "\033[1;0m"
