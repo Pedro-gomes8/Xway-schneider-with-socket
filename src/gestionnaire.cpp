@@ -41,6 +41,28 @@ void watchTrain(int serverSocket){
     // fica lendo as mensagens do socket especifico
     CHECKERROR(listen(serverSocket, 1),-1," Listen Socket failed \n");
 
+
+    while(true){
+        struct sockaddr_in clientAddress;
+        socklen_t clientLen = sizeof(clientAddress);
+        int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
+    
+        CHECKERROR(clientSocket,-1," Listen Socket failed \n");
+
+        char buffer[1024];
+        ssize_t n;
+        while ((n = read(clientSocket, buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[n] = '\0';
+            std::cout << "Recebido: " << buffer <<" de ID thread: " << std::this_thread::get_id() << std::endl;
+            // Aqui você pode implementar a lógica para verificar qual recurso o trem deseja.
+            // Por exemplo, se o recurso estiver livre, envie uma resposta ("1"):
+            // write(clientSocket, "1", 1);
+        }
+        close(clientSocket);
+        std::cout << "Client socket closed: " << std::endl;
+
+    }
+    
     // DONE: passar socket como argumento da função
     
     // Enquanto não receber msg de finalisar :
