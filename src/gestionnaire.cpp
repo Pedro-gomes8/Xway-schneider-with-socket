@@ -18,18 +18,30 @@
 
 using namespace std;
 
+#define CHECKERROR(var, val, msg) \
+  if (var == val)                 \
+  {                               \
+    perror(msg);                  \
+    exit(1);                      \
+  }
+
 void help_command(char name[])
 {
-fprintf(stderr, "Usage: %s [local IP] [remote IP=localhost] [remote port = %d]\n", name,
-        502);
+    // Mudar isso futuramente
+fprintf(stderr, "Usage: %s [local IP] [port]\n", name);
 }
 
 std::mutex R1, R2, R3, R4, R5;
 
-void watchTrain(){
+void watchTrain(int serverSocket){
 
+
+    std::cout << "ID thread: " << std::this_thread::get_id() << std::endl;
+    
     // fica lendo as mensagens do socket especifico
-    // TODO: passar socket como argumento da função
+    CHECKERROR(listen(serverSocket, 1),-1," Listen Socket failed \n");
+
+    // DONE: passar socket como argumento da função
     
     // Enquanto não receber msg de finalisar :
         // Ler o identificador para saber qual dos dois trens ele deve responder
@@ -50,29 +62,49 @@ int main(int argc, char *argv[]){
       exit(EXIT_SUCCESS);
     }
 
-    int gest_socket = socket(AF_INET,SOCK_STREAM,0);
-    sockaddr_in gestAddress;
-    gestAddress.sin_family = AF_INET;
-    gestAddress.sin_port = 0;
-    gestAddress.sin_addr.s_addr = inet_addr(argv[1]);
+    // Create Socket for PC1 (TRAIN 1 ET TRAIN 2)
 
-    // binding gestionnaire socket
-    bind(gest_socket, (struct sockaddr*)&gestAddress,sizeof(gestAddress) );
+    int socketPC1 = socket(AF_INET,SOCK_STREAM,0);
 
-    listen(gest_socket, 2);
+    CHECKERROR(socketPC1, -1, "Creation socket PC1 fail !!!\n");
 
-    int clientSocket = accept(serverSocket, nullptr, nullptr);
+    sockaddr_in pc1Address;
+    pc1Address.sin_family = AF_INET;
+    pc1Address.sin_port = htons(atoi(argv[2]));
+    pc1Address.sin_addr.s_addr = inet_addr(argv[1]);
 
-    char buffer[1024] = {0};
-    recv(clientSocket, buffer, sizeof(buffer), 0);
-    cout << "Message from client: " << buffer << endl;  
-    
+    // binding pc 1 socket 
+
+    int bindPC1 = bind(socketPC1, (struct sockaddr*)&pc1Address,sizeof(pc1Address) );
+    CHECKERROR(bindPC1, -1, "Error binding socket PC1 !!!\n");
+
+    // Create Socket for PC2 (TRAIN 3 ET TRAIN 4)
+
+    int socketPC2 = socket(AF_INET,SOCK_STREAM,0);
+    CHECKERROR(socketPC2, -1, "Creation socket PC2 fail !!!\n");
+
+    sockaddr_in pc2Address;
+    pc2Address.sin_family = AF_INET;
+    pc2Address.sin_port = htons(atoi(argv[2]) + 1);
+    pc2Address.sin_addr.s_addr = inet_addr(argv[1]);
+
+    int bindPC2 = bind(socketPC2, (struct sockaddr*)&pc2Address,sizeof(pc2Address) );
+    CHECKERROR(bindPC2, -1, "Error binding socket PC2 !!!\n");
+
+
+    //while(1);
 
     // create threads, one for each PC
-    /*
-    thread pc1(watchTrain);
-    thread pc2(watchTrain);
-    */
+    
+    std::thread threadPC1(watchTrain,socketPC1);
+    std::thread threadPC2(watchTrain,socketPC2);
+
+    threadPC1.join();
+    threadPC2.join();
+
+    close(socketPC1);
+    close(socketPC2);
+    
 
     return 0;
     
