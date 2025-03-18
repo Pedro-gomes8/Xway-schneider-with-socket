@@ -1,7 +1,7 @@
 all: bin/main
 
 
-SRC=src/pcXway.cpp src/Tram.cpp
+SRC=src/pcXway.cpp src/Tram.cpp src/gestionnaire.cpp
 
 CFLAGS=-std=c++11 -stdlib=libc++
 LDFLAGS=-lc++
