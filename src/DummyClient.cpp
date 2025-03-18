@@ -30,13 +30,13 @@ using namespace std;
 void help_command(char name[])
 {
     // Mudar isso futuramente
-fprintf(stderr, "Usage: %s [server IP] [server port]\n", name);
+fprintf(stderr, "Usage: %s [server IP] [server port] [msg]\n", name);
 }
 
 int main(int argc, char *argv[]){
 
 
-    if ((argc > 1 && strncmp(argv[1], "help", 4) == 0) || argc < 3)
+    if ((argc > 1 && strncmp(argv[1], "help", 4) == 0) || argc < 4)
     {
       help_command(argv[0]);
       exit(EXIT_SUCCESS);
@@ -56,8 +56,17 @@ int main(int argc, char *argv[]){
     int connectClient = connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
     CHECKERROR(connectClient, -1, "connectClientfail !!!\n");
     
-    const char* message = "Hello, server!";
+    const char* message = argv[3];
     send(clientSocket, message, strlen(message), 0);
+
+    // Lendo o acknowledge enviado pelo servidor
+    char ack[1024];
+    int bytesReceived = recv(clientSocket, ack, sizeof(ack) - 1, 0);
+    
+    CHECKERROR(bytesReceived, -1, "acknowledge problem !!!\n");
+
+    ack[bytesReceived] = '\0'; // Garante que a string esteja terminada em nulo
+    cout << "Acknowledge recebido do servidor: " << ack << endl;
 
     close(clientSocket);
 

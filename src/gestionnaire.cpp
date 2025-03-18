@@ -39,25 +39,34 @@ void watchTrain(int serverSocket){
     std::cout << "ID thread: " << std::this_thread::get_id() << std::endl;
     
     // fica lendo as mensagens do socket especifico
-    CHECKERROR(listen(serverSocket, 1),-1," Listen Socket failed \n");
+    CHECKERROR(listen(serverSocket, 2),-1," Listen Socket failed \n");
 
+    char buffer[1024];
+    ssize_t n;
 
-    while(true){
+    while(strncmp(buffer, "fim", 3)!= 0){
         struct sockaddr_in clientAddress;
         socklen_t clientLen = sizeof(clientAddress);
-        int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
-    
-        CHECKERROR(clientSocket,-1," Listen Socket failed \n");
 
-        char buffer[1024];
-        ssize_t n;
-        while ((n = read(clientSocket, buffer, sizeof(buffer) - 1)) > 0) {
-            buffer[n] = '\0';
-            std::cout << "Recebido: " << buffer <<" de ID thread: " << std::this_thread::get_id() << std::endl;
-            // Aqui você pode implementar a lógica para verificar qual recurso o trem deseja.
-            // Por exemplo, se o recurso estiver livre, envie uma resposta ("1"):
-            // write(clientSocket, "1", 1);
+        std::cout << "Try to accept:" << std::endl; 
+        int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
+        CHECKERROR(clientSocket,-1," Listen Socket failed \n");
+        std::cout << "Accept done" << std::endl; 
+
+        
+        std::cout << "Try to read:" << std::endl; 
+        n = read(clientSocket, buffer, sizeof(buffer) - 1);
+        std::cout << "read done:" << std::endl; 
+        
+        buffer[n] = '\0';
+        std::cout << "Received: " << buffer <<" from ID thread: " << std::this_thread::get_id() << std::endl;
+       
+    
+        const char *ack = "ACK";
+        if (send(clientSocket, ack, strlen(ack), 0) < 0) {
+            perror("send ACK");
         }
+
         close(clientSocket);
         std::cout << "Client socket closed: " << std::endl;
 
@@ -122,7 +131,11 @@ int main(int argc, char *argv[]){
     std::thread threadPC2(watchTrain,socketPC2);
 
     threadPC1.join();
+    std::cout << "Thread 1 finished" << std::endl; 
+
     threadPC2.join();
+    std::cout << "Thread 2 finished" << std::endl; 
+
 
     close(socketPC1);
     close(socketPC2);
