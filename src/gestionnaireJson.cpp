@@ -16,6 +16,9 @@
 //#include "../include/mapping.h"
 //#include "../include/tram.h"
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 using namespace std;
 
 #define CHECKERROR(var, val, msg) \
@@ -31,12 +34,14 @@ void help_command(char name[])
 fprintf(stderr, "Usage: %s [local IP] [port]\n", name);
 }
 
-std::mutex R1, R2, R3, R4, R5;
+std::mutex parole, R1, R2, R3, R4, R5;
 
 void watchTrain(int serverSocket){
 
+    const char *ack;
+    //unique_lock<mutex> ParoleLock(parole);
 
-    std::cout << "ID thread: " << std::this_thread::get_id() << std::endl;
+    // std::cout << "ID thread: " << std::this_thread::get_id() << std::endl;
     
     // Here we set a queue with length 2 
     CHECKERROR(listen(serverSocket, 2),-1," Listen Socket failed \n");
@@ -44,38 +49,90 @@ void watchTrain(int serverSocket){
     char buffer[1024];
     ssize_t n;
 
-    while(strncmp(buffer, "fim", 3)!= 0){
-        struct sockaddr_in clientAddress;
-        socklen_t clientLen = sizeof(clientAddress);
+    struct sockaddr_in clientAddress;
+    socklen_t clientLen = sizeof(clientAddress);
+    int clientSocket;
+
+    while(true){
 
         std::cout << "Try to accept:" << std::endl; 
-        int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
+        clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
         CHECKERROR(clientSocket,-1," Listen Socket failed \n");
         std::cout << "Accept done" << std::endl; 
 
         
         std::cout << "Try to read:" << std::endl; 
         n = read(clientSocket, buffer, sizeof(buffer) - 1);
+        CHECKERROR(n,-1," Listen Socket failed \n");
         std::cout << "read done:" << std::endl; 
         
         buffer[n] = '\0';
-        std::cout << "Received: " << buffer <<" from ID thread: " << std::this_thread::get_id() << std::endl;
-       
-        if(strncmp(buffer, "R1", 7) == 0){
-            unique_lock<mutex> R1Lock(R1);
-            cout << "R1 locked" << endl;
-            this_thread::sleep_for(chrono::seconds(2));
-            cout << "R1 unlocked by thread " << this_thread::get_id() << endl;
-            R1Lock.unlock();
-        }
+        
+        try {
+            // Converte a string recebida para um objeto JSON
+            json receivedMsg = json::parse(buffer);
+            int trainId = receivedMsg["train_id"];
+            std::string resource = receivedMsg["resource"];
+
+            std::cout << "Thread " << std::this_thread::get_id()
+                      << " - Trem " << trainId 
+                      << " solicitou o recurso: " << resource << std::endl;
+
+            // Se for mensagem de finalização, interrompe o loop
+            if (resource == "fim") {
+                std::cout << "Finalizando watchTrain" << std::endl;
+                close(clientSocket);
+                break;
+            }
     
-        const char *ack = "ACK";
-        if (send(clientSocket, ack, strlen(ack), 0) < 0) {
-            perror("send ACK");
+            // Seleciona o mutex correspondente com base na string resource
+            std::mutex* resourceMutex = nullptr;
+            if (resource == "R1") {
+                resourceMutex = &R1;
+            } else if (resource == "R2") {
+                resourceMutex = &R2;
+            } else if (resource == "R3") {
+                resourceMutex = &R3;
+            } else if (resource == "R4") {
+                resourceMutex = &R4;
+            } else if (resource == "R5") {
+                resourceMutex = &R5;
+            } else {
+                std::cerr << "Recurso desconhecido: " << resource << std::endl;
+            }
+    
+            if (resourceMutex != nullptr) {
+                // Cria um lock no mutex correspondente. Esse lock será automaticamente liberado 
+                // quando o objeto lock sair de escopo.
+                std::cout << "Train " << trainId << " tenta travar mutex " << resource << std::endl;
+                std::unique_lock<std::mutex> lock(*resourceMutex);
+                std::cout << "Mutex " << resource << " travado para trem " << trainId << std::endl;
+
+                ack = "1";
+
+                CHECKERROR(send(clientSocket, ack, strlen(ack), 0),-1," send ACK failed \n");
+                
+                /*
+                if (send(clientSocket, ack, strlen(ack), 0) < 0) {
+                    perror("send ACK");
+                }
+                */
+
+                // Aqui você pode inserir a lógica de processamento enquanto o recurso estiver travado.
+                // Por exemplo: acessar o recurso, atualizar status, etc.
+                // O lock será liberado automaticamente ao sair deste bloco.
+            }
+
+        }
+        catch (json::exception& e) {
+            std::cerr << "Erro ao parsear JSON: " << e.what() << std::endl;
+            ack = "0";
+            
         }
 
         close(clientSocket);
         std::cout << "Client socket closed: " << std::endl;
+       // ParoleLock.unlock();
 
     }
     
