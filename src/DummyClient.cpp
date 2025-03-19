@@ -48,58 +48,61 @@ int main(int argc, char *argv[]){
 
     // Create Socket for PC1 (TRAIN 1 ET TRAIN 2)
 
-    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-
-    CHECKERROR(clientSocket, -1, "Creation socket client fail !!!\n");
-
+  
+    
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(atoi(argv[2]));
     serverAddress.sin_addr.s_addr = inet_addr(argv[1]);
    
+  
 
     while(1){
 
+    // Cria um novo socket para cada requisição
+    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    CHECKERROR(clientSocket, -1, "Creation socket client fail !!!\n");
+
+    // Conecta ao servidor
+    int connectClient = connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+    CHECKERROR(connectClient, -1, "connectClient fail !!!\n");
+
     int ID_user;
-    char ressource_user[3];
-
-    cout <<"ID do train [1,2,3,4,...]" <<endl ;
+    string ressource_user;
+    string action_user;
+    
+    cout << "ID do train [1,2,3,4,...]" << endl;
     cin >> ID_user;
-    cout <<"ressource [R1,R2,R3,R4,...]" <<endl ;
+    cout << "resource [R1,R2,R3,R4,...]" << endl;
     cin >> ressource_user;
-
-    if(ID_user == -1){
-      cout <<"Sair do programa" <<endl ;
-      break;
+    cout << "action [lock, unlock, nothing]" << endl;
+    cin >> action_user;
+    
+    if (ID_user == -1) {
+        cout << "Sair do programa" << endl;
+        close(clientSocket);
+        break;
     }
 
-    int connectClient = connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-    CHECKERROR(connectClient, -1, "connectClientfail !!!\n");
-    
-    // Cria a mensagem JSON com o ID do trem e o recurso solicitado
+    // Cria a mensagem JSON
     json message;
-    message["train_id"] = ID_user;       // Exemplo: trem de ID 1
-    message["resource"] = ressource_user;    // Exemplo: recurso R1 (pode ser R1 a R5)
+    message["train_id"] = ID_user;
+    message["resource"] = ressource_user;
+    message["action"] = action_user;
 
-    // Converte o objeto JSON para string
     std::string jsonStr = message.dump();
-
-
-    //const char* message = argv[3];
     send(clientSocket, jsonStr.c_str(), jsonStr.size(), 0);
 
-    // Lendo o acknowledge enviado pelo servidor
     char ack[1024];
     int bytesReceived = recv(clientSocket, ack, sizeof(ack) - 1, 0);
-    
     CHECKERROR(bytesReceived, -1, "acknowledge problem !!!\n");
 
-    ack[bytesReceived] = '\0'; // Garante que a string esteja terminada em nulo
+    ack[bytesReceived] = '\0';
     cout << "Acknowledge recebido do servidor: " << ack << endl;
 
+    close(clientSocket);
     }
 
-    close(clientSocket);
 
     return 0;
     

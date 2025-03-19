@@ -4,12 +4,17 @@ all: bin/main
 SRC=src/tram.cpp src/gestionnaire.cpp src/gestionnaireJson.cpp
 ICL=include/tram.h include/mapping.h
 
-CFLAGS=-std=c++11 #-stdlib=libc++
+CFLAGS=-std=c++20 #-stdlib=libc++
 LDFLAGS=#-lc++ #-ljson_spirit
 
 test: bin/test
 
 mainJson: bin/mainJson 
+
+mainMulti: bin/mainMulti 
+
+bin/mainMulti: src/gestionnaireMulti.cpp $(ICL)
+	g++ $(CFLAGS) $< -o $@ $(LDFLAGS)
 
 bin/mainJson: src/gestionnaireJson.cpp $(ICL)
 	g++ $(CFLAGS) $< -o $@ $(LDFLAGS)
