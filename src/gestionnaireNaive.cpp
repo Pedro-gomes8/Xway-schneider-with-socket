@@ -13,6 +13,7 @@
 #include <string>
 #include <thread>
 #include <semaphore>
+#include <csignal> 
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
@@ -42,7 +43,7 @@ std::map<std::string, int> resourceOwners = {
     {"R5", 0}
 };
 
-void printMenu(std::map<std::string, int> resourceOwners) {
+void printMenu(int signal_num) {
 
     for (const auto &entry : resourceOwners) {
         cout << "Ressource " << entry.first << " -> ";
@@ -54,9 +55,10 @@ void printMenu(std::map<std::string, int> resourceOwners) {
     }
     cout << "=================== " << endl;
 
+    //exit(signal_num); 
+
     
 }
-
 
 void debugMenu() {
     while (true) {
@@ -111,21 +113,21 @@ void watchTrain(int serverSocket) {
     while (true) {
         //================ 1) Try to accept connexion 
 
-        //cout << "Try to accept:" << endl;
+        cout << "Try to accept:" << endl;
         
         clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
         CHECKERROR(clientSocket, -1, "Accept failed \n");
         
-        //cout << "Accept done" << endl;
+        cout << "Accept done" << endl;
 
         //================= 2) Read msg from client
 
-        //cout << "Try to read:" << endl;
+        cout << "Try to read:" << endl;
         
         n = read(clientSocket, buffer, sizeof(buffer) - 1);
         CHECKERROR(n, -1, "Read failed \n");
         
-        //cout << "Read done:" << endl;
+        cout << "Read done:" << endl;
 
         buffer[n] = '\0';
 
@@ -145,12 +147,12 @@ void watchTrain(int serverSocket) {
             }
 
             // =============== PRINT DEBUG
-            /*
+            
             cout << "Thread " << std::this_thread::get_id()
                  << " - Train " << trainId
                  << " askef for ressource: " << resource
                  << " action: " << action << endl;
-            */
+            
             
             // =============== 3.1) Ressource Logic BEGIN
 
@@ -162,6 +164,8 @@ void watchTrain(int serverSocket) {
                     if (resourceOwners[resource] == trainId) {
                         isOwner = true;
                     }
+                    raise(SIGUSR1);
+
                 }
                 if(isOwner == true){
                     //ack = "Train has already the ressource";
@@ -187,6 +191,8 @@ void watchTrain(int serverSocket) {
                     {
                         std::lock_guard<std::mutex> lock(ownersMutex);
                         resourceOwners[resource] = trainId;
+                        raise(SIGUSR1);
+
                     }
                     //ack = "Resource locked successfully";
                     ack = "1";
@@ -205,6 +211,8 @@ void watchTrain(int serverSocket) {
                         isOwner = true;
                         resourceOwners[resource] = 0; // clear owner in map
                     }
+                    raise(SIGUSR1);
+
                 }
 
                 if (isOwner) {
@@ -238,7 +246,7 @@ void watchTrain(int serverSocket) {
             // =============== Ressource Logic END ====================
 
             // =============== PRINT STATES
-            printMenu(resourceOwners);
+            //printMenu(resourceOwners);
 
 
         }
@@ -251,7 +259,7 @@ void watchTrain(int serverSocket) {
         CHECKERROR(send(clientSocket, ack, strlen(ack), 0), -1, "Send ACK failed \n");
 
         close(clientSocket);
-        //cout << "Client socket closed." << endl;
+        cout << "Client socket closed." << endl;
     }
 }
 
@@ -302,6 +310,9 @@ int main(int argc, char *argv[]) {
     CHECKERROR(socketPC4, -1, "Creation socket PC4 fail !!!\n");
     int bindPC4 = bind(socketPC4, (struct sockaddr*)&pc4Address, sizeof(pc4Address));
     CHECKERROR(bindPC4, -1, "Error binding socket PC4 !!!\n");
+
+    // signal treatment
+    signal(SIGUSR1, printMenu); 
 
     // Create train threads
     thread threadPC1(watchTrain, socketPC1);
