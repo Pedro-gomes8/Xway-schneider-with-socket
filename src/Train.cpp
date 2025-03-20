@@ -1,9 +1,10 @@
 #include "../include/Train.h"
 #include "../include/Tram.h"
+#include "../include/SocketHandler.hpp"
 #include <iostream>
 #include <tuple>
 
-Train::Train(int _trainId, int _xwayAddr, int _port, std::vector<std::tuple<unsigned char, int>> _path): pathStep(0), trainId(_trainId), xwayAddr(_xwayAddr), port(_port), path(_path),tram(_xwayAddr, _port, _trainId){
+Train::Train(int _trainId, int _xwayAddr, int _port, std::vector<std::tuple<unsigned char, int>> _path, SocketHandler *sock): pathStep(0), trainId(_trainId), xwayAddr(_xwayAddr), port(_port), path(_path),tram(_xwayAddr, _port, _trainId), resourceManager(sock){
 
 
 }

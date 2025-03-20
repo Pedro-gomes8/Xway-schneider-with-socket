@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string>
+#include <iostream>
 
 
 SocketHandler::SocketHandler(const char* clientAddress, const char* servAddress,int port){
@@ -25,6 +26,7 @@ SocketHandler::~SocketHandler(){
 }
 
 int SocketHandler::connectSocket(){
+    std::cout << "Connecting socket\n";
     if (connect(sd1, (const struct sockaddr *)&addrServ, sizeof(struct sockaddr_in)) == -1){
         return 0;
     }
@@ -32,13 +34,13 @@ int SocketHandler::connectSocket(){
 }
 
 
-int SocketHandler::sendData(const void *buf){
-    write(this->sd1, buf, sizeof(buf));
+int SocketHandler::sendData(const void *buf,size_t size){
+    write(this->sd1, buf, size);
     return 0;
 }
 
-int SocketHandler::receiveData(void *buf){
-    read(this->sd1, buf, sizeof(buf));
+int SocketHandler::receiveData(void *buf, size_t size){
+    read(this->sd1, buf, size);
     return 0;
 }
 

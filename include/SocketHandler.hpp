@@ -12,7 +12,7 @@ class SocketHandler{
 
     int connectSocket();
 
-    int sendData(const void *buf);
+    int sendData(const void *buf,size_t size);
 
-    int receiveData(void *buf);
+    int receiveData(void *buf, size_t size);
 };
