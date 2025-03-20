@@ -33,6 +33,8 @@ void help_command(char name[]) {
 // Declaração global dos semáforos para cada recurso
 std::binary_semaphore semR1(1), semR2(1), semR3(1), semR4(1), semR5(1);
 
+std::mutex R1,R2,R3,R4,R5; 
+
 // Mapa para rastrear o trem que possui o lock de cada recurso
 std::mutex ownersMutex;
 std::map<std::string, int> resourceOwners = {
@@ -174,23 +176,47 @@ void watchTrain(int serverSocket) {
                 }else{
                     // Try to lock the ressource indicated in "ressource"
                     if (resource == "R1") {
-                        semR1.acquire();
+                        //semR1.acquire();
+                        R1.lock();
                     } else if (resource == "R2") {
-                        semR2.acquire();
+                        //semR2.acquire();
+                        R2.lock();
+
                     } else if (resource == "R3") {
-                        semR3.acquire();
+                        //semR3.acquire();
+                        R3.lock();
+
                     } else if (resource == "R4") {
-                        semR4.acquire();
+                        //semR4.acquire();
+                        R4.lock();
+
                     } else if (resource == "R5") {
-                        semR5.acquire();
-                    } else {
+                        //semR5.acquire()
+                        R5.lock();
+
+                    } else if (resource == "R1R2") {
+                        //semR5.acquire();
+                        std::lock(R1,R2);
+
+                    } else if (resource == "R3R4") {
+                        //semR5.acquire();
+                        std::lock(R3,R4);
+
+                    } else if (resource == "R1R2R3") {
+                        //semR5.acquire();
+                        std::lock(R1,R2,R3);
+
+                    } 
+                    else {
                         cerr << "Resource not found: " << resource << endl;
                     }
                     // After lock complet, save the train as ressource owner
               
                     {
                         std::lock_guard<std::mutex> lock(ownersMutex);
+                        
                         resourceOwners[resource] = trainId;
+                        
                         raise(SIGUSR1);
 
                     }
@@ -217,15 +243,24 @@ void watchTrain(int serverSocket) {
 
                 if (isOwner) {
                     if (resource == "R1") {
-                        semR1.release();
+                        //semR1.release();
+                        R1.unlock();
                     } else if (resource == "R2") {
-                        semR2.release();
+                        //semR2.release();
+                        R2.unlock();
+
                     } else if (resource == "R3") {
-                        semR3.release();
+                        //semR3.release();
+                        R3.unlock();
+
                     } else if (resource == "R4") {
-                        semR4.release();
+                        //semR4.release();
+                        R4.unlock();
+
                     } else if (resource == "R5") {
-                        semR5.release();
+                        //semR5.release();
+                        R5.unlock();
+
                     } else {
                         cerr << "Resource not found: " << resource << endl;
                     }
