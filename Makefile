@@ -11,9 +11,9 @@ test: bin/test
 
 mainJson: bin/mainJson 
 
-mainMulti: bin/mainMulti 
+mainNaive: bin/mainNaive 
 
-bin/mainMulti: src/gestionnaireMulti.cpp $(ICL)
+bin/mainNaive: src/gestionnaireNaive.cpp $(ICL)
 	g++ $(CFLAGS) $< -o $@ $(LDFLAGS)
 
 bin/mainJson: src/gestionnaireJson.cpp $(ICL)
