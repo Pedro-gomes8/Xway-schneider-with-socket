@@ -34,7 +34,7 @@ using namespace std;
 void help_command(char name[])
 {
     // Mudar isso futuramente
-fprintf(stderr, "Usage: %s [server IP] [server port] [msg]\n", name);
+fprintf(stderr, "Usage: %s [server IP] [server port] \n", name);
 }
 
 int main(int argc, char *argv[]){
