@@ -147,7 +147,9 @@ void watchTrain(int serverSocket) {
                     }
                 }
                 if(isOwner == true){
-                    ack = "Train has already the ressource";
+                    //ack = "Train has already the ressource";
+                    ack = "1";
+
                 }else{
                     // Try to lock the ressource indicated in "ressource"
                     if (resource == "R1") {
@@ -169,7 +171,9 @@ void watchTrain(int serverSocket) {
                         std::lock_guard<std::mutex> lock(ownersMutex);
                         resourceOwners[resource] = trainId;
                     }
-                    ack = "Resource locked successfully";
+                    //ack = "Resource locked successfully";
+                    ack = "1";
+
                 }              
             }
             
@@ -200,13 +204,19 @@ void watchTrain(int serverSocket) {
                     } else {
                         cerr << "Resource not found: " << resource << endl;
                     }
-                    ack = "Resource unlocked successfully";
+                    //ack = "Resource unlocked successfully";
+                    ack = "1";
+
                 } else {
-                    ack = "Unlock ignored: train is not owner of resource";
+                    //ack = "Unlock ignored: train is not owner of resource";
+                    ack = "0";
+
                 }
             }
             else {
-                ack = "No action taken";
+                //ack = "No action taken";
+                ack = "0";
+
             }
             // =============== Ressource Logic END ====================
 
@@ -272,17 +282,20 @@ int main(int argc, char *argv[]) {
     int bindPC4 = bind(socketPC4, (struct sockaddr*)&pc4Address, sizeof(pc4Address));
     CHECKERROR(bindPC4, -1, "Error binding socket PC4 !!!\n");
 
-    // Cria threads para cada socket (simulando PCs responsáveis por diferentes trens)
+    // Create train threads
     thread threadPC1(watchTrain, socketPC1);
     thread threadPC2(watchTrain, socketPC2);
     thread threadPC3(watchTrain, socketPC3);
     thread threadPC4(watchTrain, socketPC4);
 
+    // Create menu debug thread
     thread debugThread(debugMenu);
 
-    // Aguarda a saída do debug menu
+    // Wait for debug thread
     debugThread.join();
     cout << "debug menu finished" << endl;
+
+    // Wait for trains threads
 
     threadPC1.join();
     cout << "Thread 1 finished" << endl;
