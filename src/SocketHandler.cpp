@@ -5,6 +5,8 @@
 #include <string>
 #include <iostream>
 #include <cerrno>
+#include <cstring>
+
 
 
 SocketHandler::SocketHandler(const char* clientAddress, const char* servAddress,int port){

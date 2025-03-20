@@ -30,7 +30,7 @@ class Train {
     void followPath();
 
 
-    void handleResource(unsigned char activate);
+    void handleResource(unsigned char activate, int istrocon);
     void releaseResource(unsigned char activate);
 };
 

@@ -12,7 +12,7 @@ Train::Train(int _trainId, int _xwayAddr, int _port, std::vector<std::tuple<unsi
 }
 
 
-void Train::handleResource(unsigned char activate){
+void Train::handleResource(unsigned char activate, int istrocon){
     char managerResponse[256];
     int toRequest = 0;
     nlohmann::json message;
@@ -37,6 +37,7 @@ void Train::handleResource(unsigned char activate){
                     toRequest = 1;
                     break;
                 case 0x03:
+                    if (istrocon) break;
                     this->resourceTaken = "R2";
                     message["resource"] = "R2";
                     toRequest = 1;
@@ -48,8 +49,8 @@ void Train::handleResource(unsigned char activate){
         case 42:
             switch(activate){
                 case 0x07:
-                    this->resourceTaken = "R1R2";
-                    message["resource"] = "R1R2";
+                    this->resourceTaken = "R1,R2";
+                    message["resource"] = "R1,R2";
                     toRequest = 1;
                     break;
                 case 0x0D:
@@ -74,8 +75,8 @@ void Train::handleResource(unsigned char activate){
         case 49:
             switch(activate){
                 case 0x0E:
-                    this->resourceTaken = "R3R4";
-                    message["resource"] = "R3R4";
+                    this->resourceTaken = "R3,R4";
+                    message["resource"] = "R3,R4";
                     toRequest = 1;
                     break;
                 default:
@@ -85,13 +86,13 @@ void Train::handleResource(unsigned char activate){
         case 52:
             switch(activate){
                 case 0x0A:
-                    this->resourceTaken = "R1R2";
-                    message["resource"] = "R1R2";
+                    this->resourceTaken = "R1,R2";
+                    message["resource"] = "R1,R2";
                     toRequest = 1;
                     break;
                 case 0x21:
-                    this->resourceTaken = "R1R2R3";
-                    message["resource"] = "R1R2R3";
+                    this->resourceTaken = "R1,R2,R3";
+                    message["resource"] = "R1,R2,R3";
                     toRequest = 1;
                     break;
                 default:
@@ -102,6 +103,7 @@ void Train::handleResource(unsigned char activate){
     if (toRequest){
         std::string jsonStr = message.dump();
         std::cout << "Sending info to resource manager\n";
+        std::cout << jsonStr.c_str() << std::endl;
         this->resourceManager->sendData(jsonStr.c_str(), jsonStr.size());
         this->resourceManager->receiveData(managerResponse, sizeof(managerResponse));
         std::cout << "Received data from manager" << managerResponse << "\n";
@@ -182,17 +184,26 @@ void Train::releaseResource(unsigned char activate){
             break;
     }
     if (toRequest && !(this->resourceTaken.empty())){
+        std::cout << "Sending release\n";
+
         message["resource"] = this->resourceTaken;
         toRequest = 0;
         this->resourceTaken = "";
         std::string jsonStr = message.dump();
+        std::cout << jsonStr.c_str() << std::endl;
+
         this->resourceManager->sendData(jsonStr.c_str(), jsonStr.size());
+        std::cout << "s" << std::endl;
+
         this->resourceManager->receiveData(managerResponse, sizeof(managerResponse));
 
         // ACK . 1 . 0
         if (strcmp(managerResponse, "0") == 0){
             std::cout << "Error\n";
+
     }
+    std::cout << "Released\n";
+
     }
 }
 
@@ -202,7 +213,7 @@ void Train::followPath(){
     printf("Activate : %02x\n",activate );
     //
     releaseResource(activate);
-    handleResource(activate);
+    handleResource(activate,isTrocon);
     //
     std::cout << "istrocon: "<<  isTrocon << "\n";
     
