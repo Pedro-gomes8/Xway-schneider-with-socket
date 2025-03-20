@@ -31,7 +31,7 @@ void help_command(char name[]) {
 }
 
 // Declaração global dos semáforos para cada recurso
-std::binary_semaphore semR1(1), semR2(1), semR3(1), semR4(1), semR5(1);
+// std::binary_semaphore semR1(1), semR2(1), semR3(1), semR4(1), semR5(1);
 
 std::mutex R1,R2,R3,R4,R5; 
 
@@ -44,6 +44,20 @@ std::map<std::string, int> resourceOwners = {
     {"R4", 0},
     {"R5", 0}
 };
+
+vector<string> split(const string& str, char delimiter){
+    vector<string> result;
+    stringstream ss(str);
+    string token;
+
+    while(getline(ss,token,delimiter)){
+        result.push_back(token);
+    }
+
+    return result;
+
+
+}
 
 void printMenu(int signal_num) {
 
@@ -155,6 +169,11 @@ void watchTrain(int serverSocket) {
                  << " askef for ressource: " << resource
                  << " action: " << action << endl;
             
+            // Treat ressource message
+            vector<string> resource_treated;
+            char delimiter = ',';
+            resource_treated = split(resource,delimiter);
+
             
             // =============== 3.1) Ressource Logic BEGIN
 
@@ -162,15 +181,22 @@ void watchTrain(int serverSocket) {
                 bool isOwner = false;
                 {
                     std::lock_guard<std::mutex> lock(ownersMutex);
-                    // Only unlock if the train who sends unlock is the owner
-                    if (resourceOwners[resource] == trainId) {
-                        isOwner = true;
+                    for (const auto ressource_splited : resource_treated){
+                        // Only unlock if the train who sends lock is the owner
+                        if (resourceOwners[ressource_splited] == trainId) {
+                            isOwner = true;
+                        }
+                        else{
+                            isOwner = false;
+                            break;
+                        }
                     }
+                
                     raise(SIGUSR1);
 
                 }
                 if(isOwner == true){
-                    //ack = "Train has already the ressource";
+                    //ack = "Train has already all the ressources";
                     ack = "1";
 
                 }else{
@@ -194,15 +220,15 @@ void watchTrain(int serverSocket) {
                         //semR5.acquire()
                         R5.lock();
 
-                    } else if (resource == "R1R2") {
+                    } else if (resource == "R1,R2") {
                         //semR5.acquire();
                         std::lock(R1,R2);
 
-                    } else if (resource == "R3R4") {
+                    } else if (resource == "R3,R4") {
                         //semR5.acquire();
                         std::lock(R3,R4);
 
-                    } else if (resource == "R1R2R3") {
+                    } else if (resource == "R1,R2,R3") {
                         //semR5.acquire();
                         std::lock(R1,R2,R3);
 
@@ -214,9 +240,11 @@ void watchTrain(int serverSocket) {
               
                     {
                         std::lock_guard<std::mutex> lock(ownersMutex);
-                        
-                        resourceOwners[resource] = trainId;
-                        
+
+                        for (const auto ressource_splited : resource_treated){
+                            resourceOwners[ressource_splited] = trainId;
+                        }
+
                         raise(SIGUSR1);
 
                     }
@@ -233,9 +261,17 @@ void watchTrain(int serverSocket) {
                 {
                     std::lock_guard<std::mutex> lock(ownersMutex);
                     // Only unlock if the train who sends unlock is the owner
-                    if (resourceOwners[resource] == trainId) {
-                        isOwner = true;
-                        resourceOwners[resource] = 0; // clear owner in map
+
+                    for (const auto ressource_splited : resource_treated){
+                        // Only unlock if the train who sends lock is the owner
+                        if (resourceOwners[ressource_splited] == trainId) {
+                            isOwner = true;
+                            resourceOwners[ressource_splited] = 0;
+                        }
+                        else{
+                            isOwner = false;
+                            break;
+                        }
                     }
                     raise(SIGUSR1);
 
@@ -261,6 +297,26 @@ void watchTrain(int serverSocket) {
                         //semR5.release();
                         R5.unlock();
 
+                    }
+                    else if (resource == "R1,R2") {
+                        //semR5.release();
+                        R1.unlock();
+                        R2.unlock();
+
+                    }
+                    else if (resource == "R3,R4") {
+                        //semR5.release();
+                        R3.unlock();
+                        R4.unlock();
+
+                    }
+                    else if (resource == "R1,R2,R3") {
+                        //semR5.release();
+                        R1.unlock();
+                        R2.unlock();
+                        R3.unlock();
+
+
                     } else {
                         cerr << "Resource not found: " << resource << endl;
                     }
@@ -279,9 +335,6 @@ void watchTrain(int serverSocket) {
 
             }
             // =============== Ressource Logic END ====================
-
-            // =============== PRINT STATES
-            //printMenu(resourceOwners);
 
 
         }
