@@ -17,10 +17,9 @@ class Train {
 
     public:
     std::vector<std::tuple<unsigned char, int>> path;
-    std::mutex &queueMutex;
     Tram tram;
     
-    Train(int _trainId, int _xwayAddr, int _port, std::vector<std::tuple<unsigned char, int>> _path, std::mutex &_queueMutex);
+    Train(int _trainId, int _xwayAddr, int _port, std::vector<std::tuple<unsigned char, int>> _path);
     void followPath();
 };
 

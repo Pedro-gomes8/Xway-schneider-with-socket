@@ -96,7 +96,7 @@ int main(int argc, char *argv[]){
     // 42 -> train 2
     // 49 -> train 3
     // 52 -> train 4
-    Tram tram(37,16,52);
+    Tram tram(37,16,39);
 
     // train 1
     // in ints {{20, 0}, {3, 1}, {22, 0}, {14, 0}, {23, 1}, {33, 0}, {10, 1}, {7, 0}, {10, 0}, {29, 1}, {19, 1}}
@@ -116,12 +116,12 @@ int main(int argc, char *argv[]){
     // train 4
     // TODO: Fix the path, problem when inversing the troncon in the Ti07 at the end of the path (or the beginning when restarting the path)
     // in ints {{10, 0}, {7, 1}, {33, 0}, {29, 1}, {13, 0}, {49, 1}, {9, 1}, {28, 1}, {23, 0}, {27, 1}, {47, 1}}
-    std::vector<std::tuple<unsigned char, int>> path4 = {{0x0A,0},{0x07,1},{0x21,0},{0x1D,1},{0x0D,0},{0x31,1},{0x09,1},{0x1C,1},{0x17,0},{0x1B,1},{0x25,1},{0x2F,1},};
+    std::vector<std::tuple<unsigned char, int>> path4 = {{0x0A,0},{0x07,1},{0x21,0},{0x1D,1},{0x0D,0},{0x31,1},{0x09,1},{0x1C,1},{0x17,0},{0x1B,1},{0x25,1},{0x2F,1}};
     // Train train1(&tram, path4);
-    Train train1(52, 37, 14, path4, queueMutex);  
-    Train train2(49,37, 16, path3, queueMutex);
+    Train train1(39, 37, 14, path1, queueMutex);
+    // Train train2(49,37, 16, path3, queueMutex);
     train1.followPath();
-    train2.followPath();
+    // train2.followPath();
 
     int isTramVar = 0;
     do
@@ -134,8 +134,8 @@ int main(int argc, char *argv[]){
   
       printf("Tram sent\n");
       read(sd1, train1.tram.tramReceived, sizeof(train1.tram.tramReceived));
-      printf("Response received\n");
-      printf("Response: ");
+      // printf("Response received\n");
+      // printf("Response: ");
       for (int i = 0; i < sizeof(train1.tram.tramReceived); i++)
       {
         printf("%02X ", train1.tram.tramReceived[i]);
@@ -152,12 +152,13 @@ int main(int argc, char *argv[]){
           printf("%02X ", train1.tram.tramReceived[i]);
         }
         train1.tram.ack[13] = train1.tram.tramReceived[13];
+        printf("\nExpected: %02X\n", train1.tram.tramReceived[sizeof(train1.tram.tramReceived) - 2]);
   
         isTramVar = 0;
       }
       write(sd1, train1.tram.ack, sizeof(train1.tram.ack));
       train1.followPath();
-      train2.followPath();
+      // train2.followPath();
   
     } while (strcmp(buff, "FIN") && strcmp(buff, "fin"));
   
