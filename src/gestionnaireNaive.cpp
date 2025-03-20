@@ -53,20 +53,20 @@ void debugMenu() {
         
         if (command == "status") {
             lock_guard<mutex> lock(ownersMutex);
-            cout << "\nEstado atual dos recursos:" << endl;
+            cout << "\nCurrent states of ressources:" << endl;
             for (const auto &entry : resourceOwners) {
-                cout << "Recurso " << entry.first << " -> ";
+                cout << "Ressource " << entry.first << " -> ";
                 if (entry.second == 0) {
-                    cout << "Disponível" << endl;
+                    cout << "Available" << endl;
                 } else {
-                    cout << "Ocupado pelo trem " << entry.second << endl;
+                    cout << "Busy by train " << entry.second << endl;
                 }
             }
         } else if (command == "exit") {
-            cout << "Saindo do debug menu..." << endl;
+            cout << "Bye bye menu debug..." << endl;
             break;
         } else {
-            cout << "Comando não reconhecido." << endl;
+            cout << "Command not found" << endl;
         }
     }
 }
