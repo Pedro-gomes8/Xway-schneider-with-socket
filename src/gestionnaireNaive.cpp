@@ -30,9 +30,6 @@ void help_command(char name[]) {
     fprintf(stderr, "Usage: %s [local IP] [port]\n", name);
 }
 
-// Declaração global dos semáforos para cada recurso
-// std::binary_semaphore semR1(1), semR2(1), semR3(1), semR4(1), semR5(1);
-
 std::mutex R1,R2,R3,R4,R5; 
 
 // Mapa para rastrear o trem que possui o lock de cada recurso
@@ -174,7 +171,6 @@ void watchTrain(int serverSocket) {
             char delimiter = ',';
             resource_treated = split(resource,delimiter);
 
-            
             // =============== 3.1) Ressource Logic BEGIN
 
             if (action == "Lock" || action == "lock") {
