@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <vector>
 #include <tuple>
-
+#include <iostream>
 #include "../include/mapping.h"
 #include "../include/Tram.h"
 #include "../include/Train.h"
@@ -42,8 +42,10 @@ int main(int argc, char *argv[]){
     SocketHandler resourceManager(argv[1], argv[3], atoi(argv[4]));
     int nbcar;
   
-
+    std::cout << "Connecting socket automate\n";
     sockAutomate.connectSocket();
+
+    std::cout << "Connecting socket resource manager\n";
     resourceManager.connectSocket();
 
     char buff[BUFSIZE + 1];
@@ -105,7 +107,7 @@ int main(int argc, char *argv[]){
     int port = atoi(argv[7]);
 
 
-    Train train(trainId,xwayAddr,port,path, &resourceManager);
+    Train train(trainId, xwayAddr, port, path, &resourceManager);
 
     train.followPath();
 
@@ -118,7 +120,7 @@ int main(int argc, char *argv[]){
       isTramVar = 1;
   
       printf("Tram sent\n");
-      sockAutomate.receiveData(train.tram.tramReceived,sizeof(train.tram.tramReceived));
+      sockAutomate.receiveData(train.tram.tramReceived, sizeof(train.tram.tramReceived));
       printf("Response received\n");
       printf("Response: ");
       for (int i = 0; i < sizeof(train.tram.tramReceived); i++)
@@ -129,7 +131,7 @@ int main(int argc, char *argv[]){
   
       if (isTramVar)
       {
-        sockAutomate.receiveData(train.tram.tramReceived,sizeof(train.tram.tramReceived));
+        sockAutomate.receiveData(train.tram.tramReceived, sizeof(train.tram.tramReceived));
           printf("Response received\n");
         printf("Response: ");
         for (int i = 0; i < sizeof(train.tram.tramReceived); i++)
