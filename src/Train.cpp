@@ -181,7 +181,7 @@ void Train::releaseResource(unsigned char activate){
             }
             break;
     }
-    if (toRequest && !this->resourceTaken.empty()){
+    if (toRequest && !(this->resourceTaken.empty())){
         message["resource"] = this->resourceTaken;
         toRequest = 0;
         this->resourceTaken = "";
@@ -227,7 +227,6 @@ void Train::followPath(){
         this->pathStep = 0;
     }
     // std::cout << "Path Step" << this->pathStep << "\n";
-    
 
 
 }
