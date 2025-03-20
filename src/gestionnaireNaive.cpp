@@ -41,6 +41,35 @@ std::map<std::string, int> resourceOwners = {
     {"R4", 0},
     {"R5", 0}
 };
+void debugMenu() {
+    while (true) {
+        cout << "\n--- Menu de Debug ---" << endl;
+        cout << "Type 'status' to view ressources states." << endl;
+        cout << "Type 'exit' to quit." << endl;
+        cout << "Option: ";
+        
+        string command;
+        getline(cin, command);
+        
+        if (command == "status") {
+            lock_guard<mutex> lock(ownersMutex);
+            cout << "\nEstado atual dos recursos:" << endl;
+            for (const auto &entry : resourceOwners) {
+                cout << "Recurso " << entry.first << " -> ";
+                if (entry.second == 0) {
+                    cout << "Disponível" << endl;
+                } else {
+                    cout << "Ocupado pelo trem " << entry.second << endl;
+                }
+            }
+        } else if (command == "exit") {
+            cout << "Saindo do debug menu..." << endl;
+            break;
+        } else {
+            cout << "Comando não reconhecido." << endl;
+        }
+    }
+}
 
 void watchTrain(int serverSocket) {
 
@@ -65,21 +94,21 @@ void watchTrain(int serverSocket) {
     while (true) {
         //================ 1) Try to accept connexion 
 
-        cout << "Try to accept:" << endl;
+        //cout << "Try to accept:" << endl;
         
         clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
         CHECKERROR(clientSocket, -1, "Accept failed \n");
         
-        cout << "Accept done" << endl;
+        //cout << "Accept done" << endl;
 
         //================= 2) Read msg from client
 
-        cout << "Try to read:" << endl;
+        //cout << "Try to read:" << endl;
         
         n = read(clientSocket, buffer, sizeof(buffer) - 1);
         CHECKERROR(n, -1, "Read failed \n");
         
-        cout << "Read done:" << endl;
+        //cout << "Read done:" << endl;
 
         buffer[n] = '\0';
 
@@ -99,36 +128,51 @@ void watchTrain(int serverSocket) {
             }
 
             // =============== PRINT DEBUG
+            /*
             cout << "Thread " << std::this_thread::get_id()
-                 << " - Trem " << trainId
-                 << " solicitou o recurso: " << resource
-                 << " ação: " << action << endl;
-
+                 << " - Train " << trainId
+                 << " askef for ressource: " << resource
+                 << " action: " << action << endl;
+            */
             
             // =============== 3.1) Ressource Logic BEGIN
 
             if (action == "Lock" || action == "lock") {
-                // Try to lock the ressource indicated in "ressource"
-                if (resource == "R1") {
-                    semR1.acquire();
-                } else if (resource == "R2") {
-                    semR2.acquire();
-                } else if (resource == "R3") {
-                    semR3.acquire();
-                } else if (resource == "R4") {
-                    semR4.acquire();
-                } else if (resource == "R5") {
-                    semR5.acquire();
-                } else {
-                    cerr << "Resource not found: " << resource << endl;
-                }
-                // After lock complet, save the train as ressource owner
+                bool isOwner = false;
                 {
                     std::lock_guard<std::mutex> lock(ownersMutex);
-                    resourceOwners[resource] = trainId;
+                    // Only unlock if the train who sends unlock is the owner
+                    if (resourceOwners[resource] == trainId) {
+                        isOwner = true;
+                    }
                 }
-                ack = "Resource locked successfully";
+                if(isOwner == true){
+                    ack = "Train has already the ressource";
+                }else{
+                    // Try to lock the ressource indicated in "ressource"
+                    if (resource == "R1") {
+                        semR1.acquire();
+                    } else if (resource == "R2") {
+                        semR2.acquire();
+                    } else if (resource == "R3") {
+                        semR3.acquire();
+                    } else if (resource == "R4") {
+                        semR4.acquire();
+                    } else if (resource == "R5") {
+                        semR5.acquire();
+                    } else {
+                        cerr << "Resource not found: " << resource << endl;
+                    }
+                    // After lock complet, save the train as ressource owner
+              
+                    {
+                        std::lock_guard<std::mutex> lock(ownersMutex);
+                        resourceOwners[resource] = trainId;
+                    }
+                    ack = "Resource locked successfully";
+                }              
             }
+            
             else if (action == "Unlock" || action == "unlock") {
                 bool isOwner = false;
                 
@@ -138,7 +182,7 @@ void watchTrain(int serverSocket) {
                     // Only unlock if the train who sends unlock is the owner
                     if (resourceOwners[resource] == trainId) {
                         isOwner = true;
-                        resourceOwners[resource] = 0; // limpa o dono
+                        resourceOwners[resource] = 0; // clear owner in map
                     }
                 }
 
@@ -172,12 +216,11 @@ void watchTrain(int serverSocket) {
             exit(1);
         }
 
-        // Envia o ACK para o cliente
-        if (send(clientSocket, ack, strlen(ack), 0) < 0) {
-            perror("Send ACK failed");
-        }
+        // SEND THE ACK TO CLIENT
+        CHECKERROR(send(clientSocket, ack, strlen(ack), 0), -1, "Send ACK failed \n");
+
         close(clientSocket);
-        cout << "Client socket closed." << endl;
+        //cout << "Client socket closed." << endl;
     }
 }
 
@@ -230,10 +273,16 @@ int main(int argc, char *argv[]) {
     CHECKERROR(bindPC4, -1, "Error binding socket PC4 !!!\n");
 
     // Cria threads para cada socket (simulando PCs responsáveis por diferentes trens)
-    std::thread threadPC1(watchTrain, socketPC1);
-    std::thread threadPC2(watchTrain, socketPC2);
-    std::thread threadPC3(watchTrain, socketPC3);
-    std::thread threadPC4(watchTrain, socketPC4);
+    thread threadPC1(watchTrain, socketPC1);
+    thread threadPC2(watchTrain, socketPC2);
+    thread threadPC3(watchTrain, socketPC3);
+    thread threadPC4(watchTrain, socketPC4);
+
+    thread debugThread(debugMenu);
+
+    // Aguarda a saída do debug menu
+    debugThread.join();
+    cout << "debug menu finished" << endl;
 
     threadPC1.join();
     cout << "Thread 1 finished" << endl;
@@ -243,6 +292,7 @@ int main(int argc, char *argv[]) {
     cout << "Thread 3 finished" << endl;
     threadPC4.join();
     cout << "Thread 4 finished" << endl;
+    
 
     close(socketPC1);
     close(socketPC2);
