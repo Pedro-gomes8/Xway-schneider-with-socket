@@ -41,6 +41,23 @@ std::map<std::string, int> resourceOwners = {
     {"R4", 0},
     {"R5", 0}
 };
+
+void printMenu(std::map<std::string, int> resourceOwners) {
+
+    for (const auto &entry : resourceOwners) {
+        cout << "Ressource " << entry.first << " -> ";
+        if (entry.second == 0) {
+            cout << "Available" << endl;
+        } else {
+            cout << "Busy by train " << entry.second << endl;
+        }
+    }
+    cout << "=================== " << endl;
+
+    
+}
+
+
 void debugMenu() {
     while (true) {
         cout << "\n--- Menu de Debug ---" << endl;
@@ -220,6 +237,10 @@ void watchTrain(int serverSocket) {
             }
             // =============== Ressource Logic END ====================
 
+            // =============== PRINT STATES
+            printMenu(resourceOwners);
+
+
         }
         catch (json::exception &e) {
             cerr << "Erro ao parsear JSON: " << e.what() << endl;
@@ -289,11 +310,11 @@ int main(int argc, char *argv[]) {
     thread threadPC4(watchTrain, socketPC4);
 
     // Create menu debug thread
-    thread debugThread(debugMenu);
+    //thread debugThread(debugMenu);
 
     // Wait for debug thread
-    debugThread.join();
-    cout << "debug menu finished" << endl;
+    //debugThread.join();
+    //cout << "debug menu finished" << endl;
 
     // Wait for trains threads
 
