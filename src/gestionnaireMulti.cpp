@@ -190,15 +190,59 @@ int main(int argc, char *argv[]){
     std::thread threadPC1(watchTrain,socketPC1);
     std::thread threadPC2(watchTrain,socketPC2);
 
+
+    // Create Socket for PC1 (TRAIN 1 ET TRAIN 2)
+
+    int socketPC3 = socket(AF_INET,SOCK_STREAM,0);
+
+    CHECKERROR(socketPC3, -1, "Creation socket PC1 fail !!!\n");
+
+    sockaddr_in pc3Address;
+    pc3Address.sin_family = AF_INET;
+    pc3Address.sin_port = htons(atoi(argv[2]) + 2);
+    pc3Address.sin_addr.s_addr = inet_addr(argv[1]);
+
+    // binding pc 1 socket 
+
+    int bindPC3 = bind(socketPC3, (struct sockaddr*)&pc3Address,sizeof(pc3Address) );
+    CHECKERROR(bindPC3, -1, "Error binding socket PC3 !!!\n");
+
+    // Create Socket for PC2 (TRAIN 3 ET TRAIN 4)
+
+    int socketPC4 = socket(AF_INET,SOCK_STREAM,0);
+    CHECKERROR(socketPC4, -1, "Creation socket PC4 fail !!!\n");
+
+    sockaddr_in pc4Address;
+    pc4Address.sin_family = AF_INET;
+    pc4Address.sin_port = htons(atoi(argv[2]) + 3);
+    pc4Address.sin_addr.s_addr = inet_addr(argv[1]);
+
+    int bindPC4 = bind(socketPC4, (struct sockaddr*)&pc4Address,sizeof(pc4Address) );
+    CHECKERROR(bindPC4, -1, "Error binding socket PC4 !!!\n");
+
+
+
+    std::thread threadPC3(watchTrain,socketPC3);
+    std::thread threadPC4(watchTrain,socketPC4);
+
     threadPC1.join();
     std::cout << "Thread 1 finished" << std::endl; 
 
     threadPC2.join();
     std::cout << "Thread 2 finished" << std::endl; 
 
+    threadPC3.join();
+    std::cout << "Thread 3 finished" << std::endl; 
+
+    threadPC4.join();
+    std::cout << "Thread 4 finished" << std::endl; 
+
+
 
     close(socketPC1);
     close(socketPC2);
+    close(socketPC3);
+    close(socketPC4);
     
 
     return 0;
