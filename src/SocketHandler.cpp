@@ -27,9 +27,10 @@ SocketHandler::~SocketHandler(){
 
 int SocketHandler::connectSocket(){
     std::cout << "Connecting socket\n";
-    if (connect(sd1, (const struct sockaddr *)&addrServ, sizeof(struct sockaddr_in)) == -1){
+    if (connect(this->sd1, (const struct sockaddr *)&addrServ, sizeof(struct sockaddr_in)) == -1){
         return 0;
     }
+    std::cout << "Connected successfully\n";
     return 1;
 }
 
