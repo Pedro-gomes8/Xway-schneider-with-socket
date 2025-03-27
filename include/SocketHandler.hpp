@@ -8,7 +8,7 @@ class SocketHandler{
     int sd1;
     struct sockaddr_in addrServ, addrCli;
     SocketHandler(const char* clientAddress, const char* servAddress,int port);
-    ~SocketHandler();
+    //~SocketHandler();
 
     int connectSocket();
 

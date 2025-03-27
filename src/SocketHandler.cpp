@@ -23,11 +23,11 @@ SocketHandler::SocketHandler(const char* clientAddress, const char* servAddress,
     addrServ.sin_port = htons(port);
 
 }
-
+/*
 SocketHandler::~SocketHandler(){
     close(this->sd1);
 }
-
+*/
 int SocketHandler::connectSocket(){
     std::cout << "Connecting socket\n";
     if (connect(this->sd1, (const struct sockaddr *)&addrServ, sizeof(struct sockaddr_in)) == -1){

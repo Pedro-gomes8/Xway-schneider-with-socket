@@ -137,17 +137,19 @@ void watchTrain(int serverSocket) {
        
         //================= 2) Read msg from client
 
-        cout << "Thread: " << std::this_thread::get_id() << " try to read " << endl;
+        //cout << "Thread: " << std::this_thread::get_id() << " try to read " << endl;
         n = read(clientSocket, buffer, sizeof(buffer) - 1);
-        cout << "Thread: " << std::this_thread::get_id() << "serverSocket: " << serverSocket << " clientSocket: " << clientSocket << endl;
+        //cout << "Thread: " << std::this_thread::get_id() << "serverSocket: " << serverSocket << " clientSocket: " << clientSocket << endl;
         //cout << "Thread: " << std::this_thread::get_id() << " n: " << n << endl;
 
+        /*
         while(n == 0){
             cout <<"Thread: " << std::this_thread::get_id() << "Client disconnected. Waiting for a new connection..." << endl;
-            close(clientSocket);
-            clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
+            //close(clientSocket);
+            //clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
             n = read(clientSocket, buffer, sizeof(buffer) - 1);
         }
+        */
 
         CHECKERROR(n, -1, "Read failed \n");
         
@@ -172,8 +174,34 @@ void watchTrain(int serverSocket) {
 
             // =============== PRINT DEBUG
             
+            int trainId_debug;
+
+            switch (trainId)
+            {
+            case 39:
+                /* code */
+                trainId_debug = 1;
+                break;
+            case 42:
+                /* code */
+                trainId_debug = 2;
+                break;
+            case 49:
+                /* code */
+                trainId_debug = 3;
+                break;
+            case 52:
+                /* code */
+                trainId_debug = 4;
+                break;
+            
+            default:
+                break;
+            }
+
+
             cout << "Thread " << std::this_thread::get_id()
-                 << " - Train " << trainId
+                 << " - Train " << trainId_debug
                  << " askef for ressource: " << resource
                  << " action: " << action << endl;
             
@@ -199,7 +227,7 @@ void watchTrain(int serverSocket) {
                         }
                     }
                 
-                    //raise(SIGUSR1);
+                    raise(SIGUSR1);
 
                 }
                 if(isOwner == true){
@@ -231,6 +259,10 @@ void watchTrain(int serverSocket) {
                         //semR5.acquire();
                         std::lock(R1,R2);
 
+                    } else if (resource == "R2,R3") {
+                        //semR5.acquire();
+                        std::lock(R2,R3);
+
                     } else if (resource == "R3,R4") {
                         //semR5.acquire();
                         std::lock(R3,R4);
@@ -252,7 +284,7 @@ void watchTrain(int serverSocket) {
                             resourceOwners[ressource_splited] = trainId;
                         }
 
-                        //raise(SIGUSR1);
+                        raise(SIGUSR1);
 
                     }
                     //ack = "Resource locked successfully";
@@ -280,7 +312,7 @@ void watchTrain(int serverSocket) {
                             break;
                         }
                     }
-                    //raise(SIGUSR1);
+                    raise(SIGUSR1);
 
                 }
 
@@ -309,6 +341,11 @@ void watchTrain(int serverSocket) {
                         //semR5.release();
                         R1.unlock();
                         R2.unlock();
+
+                    }else if (resource == "R2,R3") {
+                        //semR5.release();
+                        R2.unlock();
+                        R3.unlock();
 
                     }
                     else if (resource == "R3,R4") {

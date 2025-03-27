@@ -32,16 +32,19 @@ void Train::handleResource(unsigned char activate, int istrocon){
                     toRequest = 1;
                     break;
                 case 0x21:
-                    this->resourceTaken = "R3";
-                    message["resource"] = "R3";
+                    this->resourceTaken = "R2,R3";
+                    message["resource"] = "R2,R3";
                     toRequest = 1;
                     break;
+
+                /*
                 case 0x03:
                     if (istrocon) break;
                     this->resourceTaken = "R2";
                     message["resource"] = "R2";
                     toRequest = 1;
                     break;
+                */
                 default:
                     break;
             }
@@ -54,15 +57,18 @@ void Train::handleResource(unsigned char activate, int istrocon){
                     toRequest = 1;
                     break;
                 case 0x0D:
-                    this->resourceTaken = "R3";
-                    message["resource"] = "R3";
+                    this->resourceTaken = "R3,R4";
+                    message["resource"] = "R3,R4";
                     toRequest = 1;
                     break;
+                    /*
                 case 0x0C:
                     this->resourceTaken = "R4";
                     message["resource"] = "R4";
                     toRequest = 1;
                     break;
+                    */
+                
                 case 0x14:
                     this->resourceTaken = "R5";
                     message["resource"] = "R5";
@@ -86,8 +92,8 @@ void Train::handleResource(unsigned char activate, int istrocon){
         case 52:
             switch(activate){
                 case 0x0A:
-                    this->resourceTaken = "R1,R2";
-                    message["resource"] = "R1,R2";
+                    this->resourceTaken = "R1,R2,R3";
+                    message["resource"] = "R1,R2,R3";
                     toRequest = 1;
                     break;
                 case 0x21:
@@ -133,9 +139,11 @@ void Train::releaseResource(unsigned char activate){
                 case 0x21:
                     toRequest = 1;
                     break;
+                /*
                 case 0x03:
                     toRequest = 1;
                     break;
+                */
                 case 0x13:
                     toRequest = 1;
                     break;
@@ -151,9 +159,11 @@ void Train::releaseResource(unsigned char activate){
                 case 0x0D:
                     toRequest = 1;
                     break;
+                    /*
                 case 0x0C:
                     toRequest = 1;
-                    break;
+                    break;]
+                    */
                 case 0x14:
                     toRequest = 1;
                     break;
@@ -172,10 +182,14 @@ void Train::releaseResource(unsigned char activate){
             break;
         case 52:
             switch(activate){
-                case 0x21:
+                /*case 0x21:
                     toRequest = 1;
                     break;
+                    */
                 case 0x25:
+                    toRequest = 1;
+                    break;
+                case 0x1C:
                     toRequest = 1;
                     break;
                 default:
@@ -189,6 +203,11 @@ void Train::releaseResource(unsigned char activate){
         message["resource"] = this->resourceTaken;
         toRequest = 0;
         this->resourceTaken = "";
+        if (activate == 0x1C){
+            message["resource"] = "R3";
+            this->resourceTaken = "R1,R2";
+            toRequest = 1;
+        }
         std::string jsonStr = message.dump();
         std::cout << jsonStr.c_str() << std::endl;
 
