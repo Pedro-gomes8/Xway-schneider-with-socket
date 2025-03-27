@@ -218,7 +218,7 @@ void watchTrain(int serverSocket) {
                     std::lock_guard<std::mutex> lock(ownersMutex);
                     for (const auto ressource_splited : resource_treated){
                         // Only unlock if the train who sends lock is the owner
-                        if (resourceOwners[ressource_splited] == trainId) {
+                        if (resourceOwners[ressource_splited] == trainId_debug) {
                             isOwner = true;
                         }
                         else{
@@ -285,7 +285,7 @@ void watchTrain(int serverSocket) {
                         std::lock_guard<std::mutex> lock(ownersMutex);
 
                         for (const auto ressource_splited : resource_treated){
-                            resourceOwners[ressource_splited] = trainId;
+                            resourceOwners[ressource_splited] = trainId_debug;
                         }
 
                         raise(SIGUSR1);
@@ -307,7 +307,7 @@ void watchTrain(int serverSocket) {
 
                     for (const auto ressource_splited : resource_treated){
                         // Only unlock if the train who sends lock is the owner
-                        if (resourceOwners[ressource_splited] == trainId) {
+                        if (resourceOwners[ressource_splited] == trainId_debug) {
                             isOwner = true;
                             resourceOwners[ressource_splited] = 0;
                         }
