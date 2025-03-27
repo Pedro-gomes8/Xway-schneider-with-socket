@@ -32,7 +32,6 @@ void help_command(char name[]) {
 
 std::mutex R1,R2,R3,R4,R5; 
 
-// Mapa para rastrear o trem que possui o lock de cada recurso
 std::mutex ownersMutex;
 std::map<std::string, int> resourceOwners = {
     {"R1", 0},
@@ -68,39 +67,7 @@ void printMenu(int signal_num) {
     }
     cout << "=================== " << endl;
 
-    //exit(signal_num); 
-
     
-}
-
-void debugMenu() {
-    while (true) {
-        cout << "\n--- Menu de Debug ---" << endl;
-        cout << "Type 'status' to view ressources states." << endl;
-        cout << "Type 'exit' to quit." << endl;
-        cout << "Option: ";
-        
-        string command;
-        getline(cin, command);
-        
-        if (command == "status") {
-            lock_guard<mutex> lock(ownersMutex);
-            cout << "\nCurrent states of ressources:" << endl;
-            for (const auto &entry : resourceOwners) {
-                cout << "Ressource " << entry.first << " -> ";
-                if (entry.second == 0) {
-                    cout << "Available" << endl;
-                } else {
-                    cout << "Busy by train " << entry.second << endl;
-                }
-            }
-        } else if (command == "exit") {
-            cout << "Bye bye menu debug..." << endl;
-            break;
-        } else {
-            cout << "Command not found" << endl;
-        }
-    }
 }
 
 void watchTrain(int serverSocket) {
@@ -141,15 +108,6 @@ void watchTrain(int serverSocket) {
         n = read(clientSocket, buffer, sizeof(buffer) - 1);
         //cout << "Thread: " << std::this_thread::get_id() << "serverSocket: " << serverSocket << " clientSocket: " << clientSocket << endl;
         //cout << "Thread: " << std::this_thread::get_id() << " n: " << n << endl;
-
-        /*
-        while(n == 0){
-            cout <<"Thread: " << std::this_thread::get_id() << "Client disconnected. Waiting for a new connection..." << endl;
-            //close(clientSocket);
-            //clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientLen);
-            n = read(clientSocket, buffer, sizeof(buffer) - 1);
-        }
-        */
 
         CHECKERROR(n, -1, "Read failed \n");
         
@@ -237,42 +195,32 @@ void watchTrain(int serverSocket) {
                 }else{
                     // Try to lock the ressource indicated in "ressource"
                     if (resource == "R1") {
-                        //semR1.acquire();
                         R1.lock();
                     } else if (resource == "R2") {
-                        //semR2.acquire();
                         R2.lock();
 
                     } else if (resource == "R3") {
-                        //semR3.acquire();
                         R3.lock();
 
                     } else if (resource == "R4") {
-                        //semR4.acquire();
                         R4.lock();
 
                     } else if (resource == "R5") {
-                        //semR5.acquire()
                         R5.lock();
 
                     } else if (resource == "R1,R2") {
-                        //semR5.acquire();
                         std::lock(R1,R2);
 
                     } else if (resource == "R2,R3") {
-                        //semR5.acquire();
                         std::lock(R2,R3);
 
                     } else if (resource == "R3,R4") {
-                        //semR5.acquire();
                         std::lock(R3,R4);
 
                     } else if (resource == "R1,R2,R3") {
-                        //semR5.acquire();
                         std::lock(R1,R2,R3);
 
                     } else if (resource == "R1,R2,R3,R4") {
-                        //semR5.acquire();
                         std::lock(R1,R2,R3,R4);
 
                     }  
@@ -322,51 +270,41 @@ void watchTrain(int serverSocket) {
 
                 if (isOwner) {
                     if (resource == "R1") {
-                        //semR1.release();
                         R1.unlock();
                     } else if (resource == "R2") {
-                        //semR2.release();
                         R2.unlock();
 
                     } else if (resource == "R3") {
-                        //semR3.release();
                         R3.unlock();
 
                     } else if (resource == "R4") {
-                        //semR4.release();
                         R4.unlock();
 
                     } else if (resource == "R5") {
-                        //semR5.release();
                         R5.unlock();
 
                     }
                     else if (resource == "R1,R2") {
-                        //semR5.release();
                         R1.unlock();
                         R2.unlock();
 
                     }else if (resource == "R2,R3") {
-                        //semR5.release();
                         R2.unlock();
                         R3.unlock();
 
                     }
                     else if (resource == "R3,R4") {
-                        //semR5.release();
                         R3.unlock();
                         R4.unlock();
 
                     }
                     else if (resource == "R1,R2,R3") {
-                        //semR5.release();
                         R1.unlock();
                         R2.unlock();
                         R3.unlock();
 
 
                     }else if (resource == "R1,R2,R3,R4") {
-                        //semR5.release();
                         R1.unlock();
                         R2.unlock();
                         R3.unlock();
@@ -401,9 +339,7 @@ void watchTrain(int serverSocket) {
 
         // SEND THE ACK TO CLIENT
         CHECKERROR(send(clientSocket, ack, strlen(ack), 0), -1, "Send ACK failed \n");
-
-        //close(clientSocket);
-        //cout << "Client socket closed." << endl;
+ 
     }
     close(clientSocket);
     cout << "Client socket closed." << endl;
@@ -457,7 +393,7 @@ int main(int argc, char *argv[]) {
     int bindPC4 = bind(socketPC4, (struct sockaddr*)&pc4Address, sizeof(pc4Address));
     CHECKERROR(bindPC4, -1, "Error binding socket PC4 !!!\n");
 
-    // signal treatment
+    // =================== Signal treatment setup
 
     struct sigaction sigbreak;
     sigbreak.sa_handler = &printMenu;
@@ -466,22 +402,14 @@ int main(int argc, char *argv[]) {
 
     CHECKERROR(sigaction(SIGUSR1,&sigbreak,NULL),-1,"Sigaction problem");
 
-    //signal(SIGUSR1, printMenu); 
 
-    // Create train threads
+    // =================== Create train threads
     thread threadPC1(watchTrain, socketPC1);
     thread threadPC2(watchTrain, socketPC2);
     thread threadPC3(watchTrain, socketPC3);
     thread threadPC4(watchTrain, socketPC4);
 
-    // Create menu debug thread
-    //thread debugThread(debugMenu);
-
-    // Wait for debug thread
-    //debugThread.join();
-    //cout << "debug menu finished" << endl;
-
-    // Wait for trains threads
+    // ======================== Wait for trains threads
 
     threadPC1.join();
     cout << "Thread 1 finished" << endl;
