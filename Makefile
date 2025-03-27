@@ -1,6 +1,6 @@
 all: bin/main bin/gestionnaire
 
-PORT:=8000
+PORT:=8080
 PORT2=$(shell expr $(PORT) + 1)
 PORT3=$(shell expr $(PORT) + 2)
 PORT4=$(shell expr $(PORT) + 3)

@@ -271,7 +271,11 @@ void watchTrain(int serverSocket) {
                         //semR5.acquire();
                         std::lock(R1,R2,R3);
 
-                    } 
+                    } else if (resource == "R1,R2,R3,R4") {
+                        //semR5.acquire();
+                        std::lock(R1,R2,R3,R4);
+
+                    }  
                     else {
                         cerr << "Resource not found: " << resource << endl;
                     }
@@ -359,6 +363,14 @@ void watchTrain(int serverSocket) {
                         R1.unlock();
                         R2.unlock();
                         R3.unlock();
+
+
+                    }else if (resource == "R1,R2,R3,R4") {
+                        //semR5.release();
+                        R1.unlock();
+                        R2.unlock();
+                        R3.unlock();
+                        R4.unlock();
 
 
                     } else {
