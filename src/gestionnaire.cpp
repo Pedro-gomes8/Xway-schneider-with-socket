@@ -362,16 +362,6 @@ int main(int argc, char *argv[]) {
     pc2Address.sin_port = htons(atoi(argv[2]) + 1);
     pc2Address.sin_addr.s_addr = inet_addr(argv[1]);
 
-    sockaddr_in pc3Address;
-    pc3Address.sin_family = AF_INET;
-    pc3Address.sin_port = htons(atoi(argv[2]) + 2);
-    pc3Address.sin_addr.s_addr = inet_addr(argv[1]);
-
-    sockaddr_in pc4Address;
-    pc4Address.sin_family = AF_INET;
-    pc4Address.sin_port = htons(atoi(argv[2]) + 3);
-    pc4Address.sin_addr.s_addr = inet_addr(argv[1]);
-
 
     // Cria e configura sockets para PC1 a PC4
     int socketPC1 = socket(AF_INET, SOCK_STREAM, 0);
@@ -383,16 +373,6 @@ int main(int argc, char *argv[]) {
     CHECKERROR(socketPC2, -1, "Creation socket PC2 fail !!!\n");
     int bindPC2 = bind(socketPC2, (struct sockaddr*)&pc2Address, sizeof(pc2Address));
     CHECKERROR(bindPC2, -1, "Error binding socket PC2 !!!\n");
-
-    int socketPC3 = socket(AF_INET, SOCK_STREAM, 0);
-    CHECKERROR(socketPC3, -1, "Creation socket PC3 fail !!!\n");
-    int bindPC3 = bind(socketPC3, (struct sockaddr*)&pc3Address, sizeof(pc3Address));
-    CHECKERROR(bindPC3, -1, "Error binding socket PC3 !!!\n");
-
-    int socketPC4 = socket(AF_INET, SOCK_STREAM, 0);
-    CHECKERROR(socketPC4, -1, "Creation socket PC4 fail !!!\n");
-    int bindPC4 = bind(socketPC4, (struct sockaddr*)&pc4Address, sizeof(pc4Address));
-    CHECKERROR(bindPC4, -1, "Error binding socket PC4 !!!\n");
 
     // =================== Signal treatment setup
 
@@ -407,25 +387,15 @@ int main(int argc, char *argv[]) {
     // =================== Create train threads
     thread threadPC1(watchTrain, socketPC1);
     thread threadPC2(watchTrain, socketPC2);
-    thread threadPC3(watchTrain, socketPC3);
-    thread threadPC4(watchTrain, socketPC4);
-
     // ======================== Wait for trains threads
 
     threadPC1.join();
     cout << "Thread 1 finished" << endl;
     threadPC2.join();
     cout << "Thread 2 finished" << endl;
-    threadPC3.join();
-    cout << "Thread 3 finished" << endl;
-    threadPC4.join();
-    cout << "Thread 4 finished" << endl;
-    
 
     close(socketPC1);
     close(socketPC2);
-    close(socketPC3);
-    close(socketPC4);
-
+    
     return 0;
 }
