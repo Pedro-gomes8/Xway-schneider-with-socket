@@ -13,10 +13,10 @@ class Sender{
     std::deque<std::vector<unsigned char>> *commandQueue;
     std::deque<const char *> *resourceQueue;
     std::mutex &mutexQueue;
-    SocketHandler sock;
+    SocketHandler *sock;
     MessageType type;
     public:
-    Sender(std::deque<std::vector<unsigned char>> *queue, std::mutex &_mutexQueue, const char* clientAddress, const char* servAddress,int port, MessageType socketType);
-    Sender(std::deque<const char *> *queue, std::mutex &_mutexQueue, const char* clientAddress, const char* servAddress,int port, MessageType socketType);
+    Sender(std::deque<std::vector<unsigned char>> *queue, std::mutex &_mutexQueue,  SocketHandler * sockt,MessageType socketType);
+    Sender(std::deque<const char *> *queue, std::mutex &_mutexQueue, SocketHandler *sockt ,MessageType socketType);
     void start();
 }
