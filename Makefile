@@ -23,7 +23,7 @@ IFLAGS=-I/opt/homebrew/include
 
 #=========================================================
 
-all: bin/main bin/gestionnaire
+all: bin/main bin/gestionnaireNaive
 
 bin/main: $(SRC) include/Tram.h
 	g++ $(CFLAGS) $(SRC) -o $@ 

@@ -121,7 +121,7 @@ int main(int argc, char *argv[]){
   
       printf("Tram sent\n");
       sockAutomate.receiveData(train.tram.tramReceived, sizeof(train.tram.tramReceived));
-      printf("Response received\n");
+      printf("Response received FE\n");
       printf("Response: ");
       for (int i = 0; i < sizeof(train.tram.tramReceived); i++)
       {
