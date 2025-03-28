@@ -1,14 +1,21 @@
 #include "../include/Train.h"
 #include "../include/Tram.h"
 #include "../include/SocketHandler.hpp"
+#include "../include/Sender.hpp"
+#include <unistd.h>
 #include <iostream>
 #include <tuple>
 #include <nlohmann/json.hpp>
 #include <cstring>
 
-Train::Train(int _trainId, int _xwayAddr, int _port, std::vector<std::tuple<unsigned char, int>> _path, SocketHandler *sock): pathStep(0), trainId(_trainId), xwayAddr(_xwayAddr), port(_port), path(_path),tram(_xwayAddr, _port, _trainId), resourceManager(sock){
+Train::Train(int _trainId, int _xwayAddr, int _port, std::vector<std::tuple<unsigned char, int>> _path, SocketHandler *sock, Sender *send, std::deque<std::vector<unsigned char>> *queue, std::mutex &_mutexQueue): pathStep(0), trainId(_trainId), xwayAddr(_xwayAddr), port(_port), path(_path),tram(_xwayAddr, _port, _trainId), resourceManager(sock), sender(send), commandQueue(queue), mutexQueue(_mutexQueue){
+    ResponseRegistry::instance().registerTrain(_trainId);
 
 
+}
+
+Train::~Train(){
+    ResponseRegistry::instance().unregisterTrain(this->trainId);
 }
 
 
@@ -255,6 +262,29 @@ void Train::followPath(){
         this->pathStep = 0;
     }
     // std::cout << "Path Step" << this->pathStep << "\n";
+    // Send tram to automate
+    this->mutexQueue.lock();
+    std::vector<unsigned char> vec(this->tram.tramVar, this->tram.tramVar + this->tram.tramVarSize);
+    this->commandQueue->push_back(vec);
+    this->mutexQueue.unlock();
+    usleep(300 * 1000);
+    std::cout << "Tram sent\n";
+    std::cout << "Waiting response\n";
 
+    auto response = ResponseRegistry::instance().waitForResponse(this->trainId);
+    std::cout << "Response received\n";
+    std::cout << "Response: ";
+    for (int i = 0; i < response.size(); i++){
+        printf("%02X ", response[i]);
+    }
+    std::cout << "\n";
+    memcpy(this->tram.tramReceived, response.data(), response.size());
+    this->tram.ack[13] = this->tram.tramReceived[13];
 
+    // Send ack
+    this->mutexQueue.lock();
+    std::vector<unsigned char> ack(this->tram.ack, this->tram.ack + sizeof(this->tram.ack));
+
+    this->commandQueue->push_back(ack);
+    this->mutexQueue.unlock();
 }

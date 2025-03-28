@@ -9,7 +9,7 @@ IP_CLIENT=172.31.68.121
 IP_GESTIONNAIRE=172.31.68.121
 IP_AUTOMATE=10.31.125.14
 
-SRC=src/pcXway.cpp src/Tram.cpp src/Train.cpp src/SocketHandler.cpp
+SRC=src/pcXway.cpp src/Tram.cpp src/Train.cpp src/SocketHandler.cpp src/ResponseRegistry.cpp src/Receiver.cpp src/Sender.cpp
 
 CFLAGS=-std=c++20 #-stdlib=libc++
 LDFLAGS=-lc++
@@ -17,10 +17,10 @@ LDFLAGS=-lc++
 IFLAGS=-I/opt/homebrew/include
 
 bin/main: $(SRC) include/Tram.h
-	g++ $(CFLAGS) $(SRC) -o $@ 
+	g++ $(CFLAGS) $(IFLAGS) $(SRC) -o $@
 
 bin/gestionnaire: src/gestionnaireNaive.cpp
-	g++ $(CFLAGS) src/gestionnaireNaive.cpp -o $@ 
+	g++ $(CFLAGS) $(IFLAGS) src/gestionnaireNaive.cpp -o $@
 
 gestionnaire:
 	./bin/gestionnaire $(IP_GESTIONNAIRE) $(PORT)

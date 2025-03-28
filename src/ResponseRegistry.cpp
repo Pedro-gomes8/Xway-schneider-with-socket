@@ -1,4 +1,4 @@
-#include "include/ResponseRegistry.hpp"
+#include "../include/ResponseRegistry.hpp"
 
 ResponseSlot::ResponseSlot() : ready(false) {}
 

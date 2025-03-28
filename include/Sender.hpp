@@ -19,4 +19,4 @@ class Sender{
     Sender(std::deque<std::vector<unsigned char>> *queue, std::mutex &_mutexQueue,  SocketHandler * sockt,MessageType socketType);
     Sender(std::deque<const char *> *queue, std::mutex &_mutexQueue, SocketHandler *sockt ,MessageType socketType);
     void start();
-}
+};

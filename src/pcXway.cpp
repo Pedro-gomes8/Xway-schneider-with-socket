@@ -12,7 +12,7 @@
 #include "../include/Tram.h"
 #include "../include/Train.h"
 #include "../include/SocketHandler.hpp"
-
+#include "../include/Sender.hpp"
 
 #define BUFSIZE 256
 
@@ -24,18 +24,18 @@
   }
 void help_command(char name[])
 {
-fprintf(stderr, "Usage: %s [PC_IP Automate_IP ResourceManager_IP ResourceManager_Port TRAIN_ID XwayAddr Port\n", name);
+fprintf(stderr, "Usage: %s [PC_IP Automate_IP ResourceManager_IP ResourceManager_Port TRAIN_ID1 XwayAddr1 Port1 TRAIN_ID2 XwayAddr2 PORT2\n", name);
 }
 
 
 
 int main(int argc, char *argv[]){
-    if ((argc > 1 && strncmp(argv[1], "help", 4) == 0) || argc < 3)
+    if ((argc > 1 && strncmp(argv[1], "help", 4) == 0) || argc < 5)
     {
       help_command(argv[0]);
       exit(EXIT_SUCCESS);
     }
-    // Example bin/main PC_IP Automate_IP ResourceManager_IP ResourceManager_Port TRAIN_ID XwayAddr Port
+    // Example bin/main PC_IP Automate_IP ResourceManager_IP ResourceManager_Port TRAIN_ID1 XwayAddr1 Port1 TRAIN_ID2 XwayAddr2 Port2
     SocketHandler sockAutomate(argv[1], argv[2], 502);
 
 
@@ -83,67 +83,94 @@ int main(int argc, char *argv[]){
     // 49 -> train 3
     // 52 -> train 4
 
-    int trainId = atoi(argv[5]);
+    std::vector<std::tuple<unsigned char, int>> pathFirst = {{0x0A,0},{0x07,1},{0x21,0},{0x1D,1},{0x0D,0},{0x31,1},{0x09,1},{0x1C,1},{0x17,0},{0x1B,1},{0x25,1},{0x2F,1}};
+    int trainId1 = atoi(argv[5]);
+    int xwayAddr1 = atoi(argv[6]);
+    int port1 = atoi(argv[7]);
 
-    switch (trainId)
+    switch (trainId1)
     {
       case 39:
-        path = path1;
+        pathFirst = path1;
         break;
       case 42:
-        path = path2;
+        pathFirst = path2;
         break;
       case 49:
-        path = path3;
+        pathFirst = path3;
         break;
       case 52:
-        path = path4;
+        pathFirst = path4;
         break;
       default:
         break;
     }
 
-    int xwayAddr = atoi(argv[6]);
-    int port = atoi(argv[7]);
+    std::vector<std::tuple<unsigned char, int>> pathSecond = {{0x0A,0},{0x07,1},{0x21,0},{0x1D,1},{0x0D,0},{0x31,1},{0x09,1},{0x1C,1},{0x17,0},{0x1B,1},{0x25,1},{0x2F,1}};
 
+    int trainId2 = atoi(argv[8]);
+    int xwayAddr2 = atoi(argv[9]);
+    int port2 = atoi(argv[10]);
 
-    Train train(trainId, xwayAddr, port, path, &resourceManager);
+    switch (trainId2)
+    {
+      case 39:
+        pathSecond = path1;
+        break;
+      case 42:
+        pathSecond = path2;
+        break;
+      case 49:
+        pathSecond = path3;
+        break;
+      case 52:
+        pathSecond = path4;
+        break;
+      default:
+        break;
+    }
+    std::deque<std::vector<unsigned char>> commandQueue;
+    std::mutex mutexQueue;
 
-    train.followPath();
+    Sender automateComm(&commandQueue, mutexQueue, &sockAutomate, MessageType::AUTOMATE);
+
+    Train train1(trainId1, xwayAddr1, port1, pathFirst, &resourceManager, &automateComm, &commandQueue, mutexQueue);
+    Train train2(trainId2, xwayAddr2, port2, pathSecond, &resourceManager, &automateComm, &commandQueue, mutexQueue);
 
     int isTramVar = 0;
     do
     {
   
-      sockAutomate.sendData(train.tram.tramVar, sizeof(train.tram.tramVar));
-      usleep(300 * 1000);
-      isTramVar = 1;
+      // sockAutomate.sendData(train.tram.tramVar, sizeof(train.tram.tramVar));
+      // usleep(300 * 1000);
+      // isTramVar = 1;
+      train1.followPath();
+      train2.followPath();
+      // printf("Tram sent\n");
+      // sockAutomate.receiveData(train.tram.tramReceived, sizeof(train.tram.tramReceived));
+      // printf("Response received\n");
+      // printf("Response: ");
+      // for (int i = 0; i < sizeof(train.tram.tramReceived); i++)
+      // {
+      //   printf("%02X ", train.tram.tramReceived[i]);
+      // }
+      // printf("\n");
   
-      printf("Tram sent\n");
-      sockAutomate.receiveData(train.tram.tramReceived, sizeof(train.tram.tramReceived));
-      printf("Response received\n");
-      printf("Response: ");
-      for (int i = 0; i < sizeof(train.tram.tramReceived); i++)
-      {
-        printf("%02X ", train.tram.tramReceived[i]);
-      }
-      printf("\n");
+      // if (isTramVar)
+      // {
+      //   sockAutomate.receiveData(train.tram.tramReceived, sizeof(train.tram.tramReceived));
+      //     printf("Response received\n");
+      //   printf("Response: ");
+      //   for (int i = 0; i < sizeof(train.tram.tramReceived); i++)
+      //   {
+      //     printf("%02X ", train.tram.tramReceived[i]);
+      //   }
+      //   train.tram.ack[13] = train.tram.tramReceived[13];
   
-      if (isTramVar)
-      {
-        sockAutomate.receiveData(train.tram.tramReceived, sizeof(train.tram.tramReceived));
-          printf("Response received\n");
-        printf("Response: ");
-        for (int i = 0; i < sizeof(train.tram.tramReceived); i++)
-        {
-          printf("%02X ", train.tram.tramReceived[i]);
-        }
-        train.tram.ack[13] = train.tram.tramReceived[13];
-  
-        isTramVar = 0;
-      }
-      sockAutomate.sendData(train.tram.ack, sizeof(train.tram.ack));
-      train.followPath();
+      //   isTramVar = 0;
+      // }
+      // sockAutomate.sendData(train.tram.ack, sizeof(train.tram.ack));
+      // train.followPath();
   
     } while (strcmp(buff, "FIN") && strcmp(buff, "fin"));
     return EXIT_SUCCESS;

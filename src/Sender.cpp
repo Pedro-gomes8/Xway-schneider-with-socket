@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 
-Sender::Sender(std::deque<std::vector<unsigned char>> *queue, std::mutex &_mutexQueue, SocketHandler * sockt, MessageType socketType) : commandQueue(queue), resourceQueue(nullptr), mutexQueue(_mutexQueue), sock(sockt), type(socketType){
+Sender::Sender(std::deque<std::vector<unsigned char>> *queue, std::mutex &_mutexQueue, SocketHandler *sockt, MessageType socketType) : commandQueue(queue), resourceQueue(nullptr), mutexQueue(_mutexQueue), sock(sockt), type(socketType){
 
 };
 
